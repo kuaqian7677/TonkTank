@@ -6,6 +6,8 @@ from kivy.clock import Clock
 from kivy.core.audio import SoundLoader
 from kivy.vector import Vector
 
+from CoreFunction import game
+
 class GameWidget(Widget):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
