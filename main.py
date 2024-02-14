@@ -6,7 +6,7 @@ from kivy.clock import Clock
 from kivy.core.audio import SoundLoader
 from kivy.vector import Vector
 
-from CoreFunction import game
+
 
 class GameWidget(Widget):
     def __init__(self, **kwargs):
@@ -22,6 +22,8 @@ class GameWidget(Widget):
 
         # calculate for middle spawn point
         window_width, window_height = Window.size
+        self.screen_Width = window_width
+        self.screen_Height = window_height
         hero_width, hero_height = 50, 50
         self.hero_x = (window_width - hero_width) / 2
         self.hero_y = (window_height - hero_height) / 2
@@ -75,6 +77,18 @@ class GameWidget(Widget):
     def move_bullets(self, dt):
         for bullet, direction in self.bullets:
             bullet.pos = Vector(*bullet.pos) + direction * 300 * dt  # adjust bullet speed here
+
+    def on_motion(self, etype, me):
+        # will receive all motion events.
+        #print(etype)
+        mousePos = [me.spos[0]*Window.size[0], me.spos[1]*Window.size[1]]
+        if etype == "update":
+            print(mousePos)
+            return mousePos
+        elif etype == "begin":
+            print("Click at",mousePos)
+ 
+    Window.bind(on_motion=on_motion)
 
 class MyApp(App):
     def build(self):
