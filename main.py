@@ -93,11 +93,11 @@ class GameWidget(Widget):
 
     def on_touch_down(self, touch):
         if touch.button == 'left':
-            direction = Vector(touch.pos) - Vector(self.hero_x + 20, self.hero_y + 20)
+            direction = Vector(touch.pos) - Vector(self.hero1.posX + 20, self.hero1.posY + 20)
             direction = direction.normalize()
 
             # bullet start pos = hero's current pos
-            start_pos = (self.hero.pos[0] + 20, self.hero.pos[1] + 20) 
+            start_pos = (self.hero1.posX + 20, self.hero1.posY + 20)
 
             #create bullet
             bullet = Rectangle(source='bullet.png', pos=start_pos, size=(10, 10))
