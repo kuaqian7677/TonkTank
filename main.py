@@ -11,26 +11,21 @@ class allMovingEntity:
     def __init__(self, x,y):
         self.posX = x
         self.posY = y
+        self.position = (self.posX, self.posY)
+        self.speed = 100
 
     def moveTo(self, x, y, ms):
-        st = self.speed * ms / 1000
         diffy = y - self.posY
-        diffx = x - self.posX
-        zeta = math.atan(math.fabs(diffy / diffx))
+        diffx = x - self.posX 
+        print(diffx, diffy)
 
-        if diffx < 0:
-            dx = -1
-        else:
-            dx = 1
 
-        if diffy < 0:
-            dy = -1
-        else:
-            dy = 1
-
-        if zeta:  # Check if zeta is not zero
-            self.x += math.cos(zeta) * st * dx
-            self.y += math.sin(zeta) * st * dy
+        direction = Vector(x,y) - Vector(self.posX, self.posY)
+        direction = direction.normalize()
+        self.position = Vector(self.position) + direction * self.speed * ms
+        self.posX = self.position[0]
+        self.posY = self.position[1]
+        return self.position
 
 
 
@@ -57,6 +52,8 @@ class GameWidget(Widget):
         self.hero_x = (window_width - hero_width) / 2
         self.hero_y = (window_height - hero_height) / 2
 
+        self.hero1 = allMovingEntity((window_width - hero_width) / 2,(window_height - hero_height) / 2)
+        
         with self.canvas:
             self.hero = Rectangle(source='hero.png', pos=(self.hero_x, self.hero_y), size=(50, 50))
 
@@ -78,8 +75,9 @@ class GameWidget(Widget):
             self.pressed_keys.remove(text)
 
     def move_step(self, dt):
-        cur_x, cur_y = self.hero.pos
-        step = 100 * dt  # //add the speed here
+        cur_x, cur_y = self.hero1.position
+
+        step = 1#100 * dt  # //add the speed here
         if 'w' in self.pressed_keys:
             cur_y += step
         if 's' in self.pressed_keys:
@@ -88,7 +86,10 @@ class GameWidget(Widget):
             cur_x -= step
         if 'd' in self.pressed_keys:
             cur_x += step
-        self.hero.pos = (cur_x, cur_y)
+        self.hero1.moveTo(cur_x, cur_y,1/60)
+        self.hero.pos = self.hero1.position
+        #print(self.hero1.position)
+        #self.hero.pos = (cur_x, cur_y)
 
     def on_touch_down(self, touch):
         if touch.button == 'left':
