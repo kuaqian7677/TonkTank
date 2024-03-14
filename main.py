@@ -5,7 +5,36 @@ from kivy.core.window import Window
 from kivy.clock import Clock
 from kivy.core.audio import SoundLoader
 from kivy.vector import Vector
+import math
 
+class allMovingEntity:
+    def __init__(self, x,y):
+        self.posX = x
+        self.posY = y
+
+    def moveTo(self, x, y, ms):
+        st = self.speed * ms / 1000
+        diffy = y - self.posY
+        diffx = x - self.posX
+        zeta = math.atan(math.fabs(diffy / diffx))
+
+        if diffx < 0:
+            dx = -1
+        else:
+            dx = 1
+
+        if diffy < 0:
+            dy = -1
+        else:
+            dy = 1
+
+        if zeta:  # Check if zeta is not zero
+            self.x += math.cos(zeta) * st * dx
+            self.y += math.sin(zeta) * st * dy
+
+
+
+        
 
 
 class GameWidget(Widget):
