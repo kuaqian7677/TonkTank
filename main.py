@@ -5,6 +5,9 @@ from kivy.core.window import Window
 from kivy.clock import Clock
 from kivy.core.audio import SoundLoader
 from kivy.vector import Vector
+
+from kivy.graphics.context_instructions import PopMatrix, PushMatrix, Transform, Rotate
+
 import math
 import random
 
@@ -15,11 +18,30 @@ class allMovingEntity:
         self.posY = y
         self.position = (self.posX, self.posY)
         self.speed = speed
+        self.angle = 0
+
+
+    def get_angle(self, x,y):
+
+        try:
+            angle = math.degrees(
+                math.atan(
+                    (self.center_y - y)
+                    / (self.center_x - x)
+                )
+            )
+        except Exception as e:
+            return 0
+
+        if angle > 0:
+            return angle
+
+        return 180 + angle
 
     def moveTo(self, x, y, ms):
         diffy = y - self.posY
         diffx = x - self.posX 
-        print(diffx, diffy)
+        #print(diffx, diffy)
         
 
         direction = Vector(x,y) - Vector(self.posX, self.posY)
@@ -27,13 +49,10 @@ class allMovingEntity:
         self.position = Vector(self.position) + direction * self.speed * ms
         self.posX = self.position[0]
         self.posY = self.position[1]
-        print(self.position)
+        self.angle = 1#self.get_angle(x,y)
+        print(self.angle)
+        #print(self.position)
         return self.position
-
-
-
-        
-
 
 class GameWidget(Widget):
     def __init__(self, **kwargs):
@@ -56,7 +75,8 @@ class GameWidget(Widget):
         self.hero_y = (window_height - hero_height) / 2
 
         self.hero1 = allMovingEntity((window_width - hero_width) / 2,(window_height - hero_height) / 2, 100)
-        
+        self.heroHp = 10
+
         with self.canvas:
             self.hero = Rectangle(source='asset/Tanks/tankBlue.png', pos=(self.hero_x, self.hero_y), size=(50, 50))
 
@@ -65,10 +85,14 @@ class GameWidget(Widget):
         ENEMY_TANK_NUMBER = 2
         for i in range(ENEMY_TANK_NUMBER):
             enemyTank = allMovingEntity(random.randint(100,400),random.randint(100,400),50)
-            enemyColor = Rectangle(source='asset/Tanks/tankRed.png', pos=(enemyTank.posX, enemyTank.posY), size=(50, 50))
+            #enemyColor = Rectangle(source='asset/Tanks/tankRed.png', pos=(enemyTank.posX, enemyTank.posY), size=(50, 50), angle=0)
+            with self.canvas:
+                PushMatrix()
+                enemyColor = Rectangle(source='asset/Tanks/tankRed.png', pos=(enemyTank.posX, enemyTank.posY), size=(50, 50))
+                Rotate(angle=100)
+                PopMatrix()
             target = [10,10]
             self.enemys.append((enemyTank, enemyColor,target))
-            self.canvas.add(enemyColor)
 
 
     def _on_keyboard_closed(self):
@@ -125,6 +149,8 @@ class GameWidget(Widget):
             targetPos = [self.hero1.posX,self.hero1.posY]
             enemy.moveTo(targetPos[0], targetPos[1],1/60)
             enemyRect.pos = enemy.position
+            #enemyRect.angle = enemy.angle
+
             
 
     def on_motion(self, etype, me):
