@@ -60,7 +60,9 @@ class allMovingEntity:
         #print(self.position)
         return self.position
 
-hpBarsizeX = 300
+hpBarsizeX = 100
+hpBarOffsetY = 80
+heroSize = 50
 class BackgroundLayout(BoxLayout):
     def __init__(self, **kwargs):
         super(BackgroundLayout, self).__init__(**kwargs)
@@ -91,7 +93,7 @@ class BackgroundLayout(BoxLayout):
             self.health_foreground = Rectangle(pos= self.game_widget.hero1.position, size=(0, 20))
         
         # Label for HP text
-        self.hp_label = Label(text=f'HP: {self.game_widget.heroHp}', pos_hint={'center_x': 0.5, 'top': 0.6})
+        self.hp_label = Label(text=f'HP: {self.game_widget.heroHp}', pos=self.health_background.pos, size=(0, 20))
         self.health_bar_layout.add_widget(self.hp_label)
         
         self.update_health_bar(10)
@@ -107,11 +109,12 @@ class BackgroundLayout(BoxLayout):
     def update_health_bar(self, d10):
         # Update the size of the foreground rectangle based on hero's health
         health_percent = self.game_widget.heroHp / 10
-        self.health_background.pos = self.game_widget.hero1.position
-        self.health_foreground.pos = self.game_widget.hero1.position
+        self.health_background.pos = (self.game_widget.hero1.posX - (hpBarsizeX/2) + (heroSize/2),self.game_widget.hero1.posY + hpBarOffsetY)
+        self.health_foreground.pos = (self.game_widget.hero1.posX- (hpBarsizeX/2)  + (heroSize/2),self.game_widget.hero1.posY + hpBarOffsetY)
         
         self.health_foreground.size = (health_percent * hpBarsizeX, 20)
         self.hp_label.text = f'HP: {self.game_widget.heroHp}'
+        self.hp_label.pos=(10,10)
 
 class GameWidget(Widget):
     def __init__(self, **kwargs):
@@ -134,10 +137,10 @@ class GameWidget(Widget):
         self.hero_y = (window_height - hero_height) / 2
         
         self.hero1 = allMovingEntity((window_width - hero_width) / 2,(window_height - hero_height) / 2, 100)
-        self.heroHp = random.randint(1,10)
+        self.heroHp = 10
 
         with self.canvas:
-            self.hero = Rectangle(source='asset/Tanks/tankBlue.png', pos=(self.hero_x, self.hero_y), size=(50, 50))
+            self.hero = Rectangle(source='asset/Tanks/tankBlue.png', pos=(self.hero_x, self.hero_y), size=(heroSize, heroSize))
 
         self.bullets = []
         self.enemys = []
@@ -172,7 +175,7 @@ class GameWidget(Widget):
 
     def move_step(self, dt):
         cur_x, cur_y = self.hero1.position
-        self.heroHp = random.randint(1,10)
+        #self.heroHp = random.randint(1,10) --Debugging Hp Bar
         step = 1#100 * dt  # //add the speed here
         if 'w' in self.pressed_keys:
             cur_y += step
