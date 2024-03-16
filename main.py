@@ -143,12 +143,48 @@ class GameWidget(Widget):
     def move_bullets(self, dt):
         for bullet, direction in self.bullets:
             bullet.pos = Vector(*bullet.pos) + direction * 600 * dt  # adjust bullet speed here
+            
+            # Check for collisions between bullet and enemies
+            for enemy, enemyRect, targetPos in self.enemys:
+                if self.detect_collision(bullet, enemyRect):
+                    # Remove bullet from the canvas
+                    self.canvas.remove(bullet)
+                    self.bullets.remove((bullet, direction))
+                    
+                    # Remove enemy from the canvas and enemy list
+                    self.canvas.remove(enemyRect)
+                    self.enemys.remove((enemy, enemyRect, targetPos))
+                    break 
+
+    def detect_collision(self, rect1, rect2):
+        x1, y1 = rect1.pos
+        w1, h1 = rect1.size
+        x2, y2 = rect2.pos
+        w2, h2 = rect2.size
+
+        if (x1 < x2 + w2 and x1 + w1 > x2 and
+            y1 < y2 + h2 and y1 + h1 > y2):
+            return True
+        return False
 
     def move_enemys(self, dt):
-         for enemy, enemyRect,targetPos in self.enemys:
-            targetPos = [self.hero1.posX,self.hero1.posY]
-            enemy.moveTo(targetPos[0], targetPos[1],1/60)
-            enemyRect.pos = enemy.position
+        for i, (enemy1, enemyRect1, targetPos1) in enumerate(self.enemys):
+            targetPos1 = [self.hero1.posX, self.hero1.posY]
+            enemy1.moveTo(targetPos1[0], targetPos1[1], 1 / 60)
+            enemyRect1.pos = enemy1.position
+            for j, (enemy2, enemyRect2, targetPos2) in enumerate(self.enemys):
+                if i != j and self.detect_collision(enemyRect1, enemyRect2):
+                    # Collision detected, but do not take any action
+                    pass
+
+
+    def avoid_overlap(self, enemy1, rect1, enemy2, rect2):
+        """Adjust the position of enemy1 to avoid overlap with enemy2."""
+        # Calculate the direction from enemy1 to enemy2
+        direction = Vector(rect2.pos) - Vector(rect1.pos)
+        # Move enemy1 away from enemy2 along the calculated direction
+        enemy1.position = Vector(enemy1.position) - direction * self.speed * 1/60
+        rect1.pos = enemy1.position
             #enemyRect.angle = enemy.angle
 
             
