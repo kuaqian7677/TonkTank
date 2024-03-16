@@ -180,9 +180,7 @@ class GameWidget(Widget):
 
     def avoid_overlap(self, enemy1, rect1, enemy2, rect2):
         """Adjust the position of enemy1 to avoid overlap with enemy2."""
-        # Calculate the direction from enemy1 to enemy2
         direction = Vector(rect2.pos) - Vector(rect1.pos)
-        # Move enemy1 away from enemy2 along the calculated direction
         enemy1.position = Vector(enemy1.position) - direction * self.speed * 1/60
         rect1.pos = enemy1.position
             #enemyRect.angle = enemy.angle
