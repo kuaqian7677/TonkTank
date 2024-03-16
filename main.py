@@ -1,12 +1,15 @@
 from kivy.app import App
 from kivy.uix.widget import Widget
-from kivy.graphics import Rectangle
+from kivy.graphics import Rectangle ,Color
 from kivy.core.window import Window
 from kivy.clock import Clock
 from kivy.core.audio import SoundLoader
 from kivy.vector import Vector
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.image import Image
+from kivy.uix.progressbar import ProgressBar
+from kivy.uix.floatlayout import FloatLayout
+from kivy.utils import get_color_from_hex
 
 from kivy.graphics.context_instructions import PopMatrix, PushMatrix, Transform, Rotate
 
@@ -56,8 +59,6 @@ class allMovingEntity:
         #print(self.position)
         return self.position
 
-class BackGround(Widget):
-    pass
 
 class BackgroundLayout(BoxLayout):
     def __init__(self, **kwargs):
@@ -74,9 +75,34 @@ class BackgroundLayout(BoxLayout):
         self.game_widget = GameWidget()
         self.add_widget(self.game_widget)
 
+        # Add health bar
+        self.health_bar_layout = FloatLayout(size_hint=(1, None), height=40)
+        self.add_widget(self.health_bar_layout)
+
+        # Custom background rectangle
+        with self.health_bar_layout.canvas:
+            Color(1, 0, 0, 1)  # Red color
+            self.health_background = Rectangle(pos_hint={'center_x': 0.5, 'top': 1}, size=(500, 20))
+
+        # Custom foreground rectangle
+        with self.health_bar_layout.canvas:
+            Color(0, 1, 0, 1)  # Green color
+            self.health_foreground = Rectangle(pos_hint={'center_x': 0.5, 'top': 1}, size=(0, 20))
+        
+        
+        
+        self.update_health_bar()
+        #self.health_bar = ProgressBar(max=10, size_hint=(None, None), size=(200, 20), pos_hint={'x': 0.5, 'y': 0.05}) 
+        #self.health_bar_layout.add_widget(self.health_bar)
+
     def _update_rect(self, instance, value):
         self.rect.size = self.size
         self.rect.pos = self.pos
+    
+    def update_health_bar(self):
+        # Update the size of the foreground rectangle based on hero's health
+        health_percent = self.game_widget.heroHp / 10
+        self.health_foreground.size = (health_percent * 500, 20)
 
 class GameWidget(Widget):
     def __init__(self, **kwargs):
@@ -99,7 +125,7 @@ class GameWidget(Widget):
         self.hero_y = (window_height - hero_height) / 2
 
         self.hero1 = allMovingEntity((window_width - hero_width) / 2,(window_height - hero_height) / 2, 100)
-        self.heroHp = 10
+        self.heroHp = random.randint(1,10)
 
         with self.canvas:
             self.hero = Rectangle(source='asset/Tanks/tankBlue.png', pos=(self.hero_x, self.hero_y), size=(50, 50))
