@@ -10,6 +10,7 @@ from kivy.uix.image import Image
 from kivy.uix.progressbar import ProgressBar
 from kivy.uix.floatlayout import FloatLayout
 from kivy.utils import get_color_from_hex
+from kivy.uix.label import Label
 
 from kivy.graphics.context_instructions import PopMatrix, PushMatrix, Transform, Rotate
 
@@ -59,12 +60,11 @@ class allMovingEntity:
         #print(self.position)
         return self.position
 
-
+hpBarsizeX = 300
 class BackgroundLayout(BoxLayout):
     def __init__(self, **kwargs):
         super(BackgroundLayout, self).__init__(**kwargs)
         self.orientation = 'vertical'
-        
         # Load the background image
         with self.canvas.before:
             self.bg = Image(source='asset/Environment/grass.png').texture
@@ -79,30 +79,39 @@ class BackgroundLayout(BoxLayout):
         self.health_bar_layout = FloatLayout(size_hint=(1, None), height=40)
         self.add_widget(self.health_bar_layout)
 
+        
         # Custom background rectangle
         with self.health_bar_layout.canvas:
             Color(1, 0, 0, 1)  # Red color
-            self.health_background = Rectangle(pos_hint={'center_x': 0.5, 'top': 1}, size=(500, 20))
+            self.health_background = Rectangle(pos= self.game_widget.hero1.position, size=(hpBarsizeX, 20))
 
         # Custom foreground rectangle
         with self.health_bar_layout.canvas:
             Color(0, 1, 0, 1)  # Green color
-            self.health_foreground = Rectangle(pos_hint={'center_x': 0.5, 'top': 1}, size=(0, 20))
+            self.health_foreground = Rectangle(pos= self.game_widget.hero1.position, size=(0, 20))
         
+        # Label for HP text
+        self.hp_label = Label(text=f'HP: {self.game_widget.heroHp}', pos_hint={'center_x': 0.5, 'top': 0.6})
+        self.health_bar_layout.add_widget(self.hp_label)
         
-        
-        self.update_health_bar()
+        self.update_health_bar(10)
         #self.health_bar = ProgressBar(max=10, size_hint=(None, None), size=(200, 20), pos_hint={'x': 0.5, 'y': 0.05}) 
         #self.health_bar_layout.add_widget(self.health_bar)
+        
 
     def _update_rect(self, instance, value):
         self.rect.size = self.size
         self.rect.pos = self.pos
-    
-    def update_health_bar(self):
+       
+
+    def update_health_bar(self, d10):
         # Update the size of the foreground rectangle based on hero's health
         health_percent = self.game_widget.heroHp / 10
-        self.health_foreground.size = (health_percent * 500, 20)
+        self.health_background.pos = self.game_widget.hero1.position
+        self.health_foreground.pos = self.game_widget.hero1.position
+        
+        self.health_foreground.size = (health_percent * hpBarsizeX, 20)
+        self.hp_label.text = f'HP: {self.game_widget.heroHp}'
 
 class GameWidget(Widget):
     def __init__(self, **kwargs):
@@ -123,7 +132,7 @@ class GameWidget(Widget):
         hero_width, hero_height = 50, 50
         self.hero_x = (window_width - hero_width) / 2
         self.hero_y = (window_height - hero_height) / 2
-
+        
         self.hero1 = allMovingEntity((window_width - hero_width) / 2,(window_height - hero_height) / 2, 100)
         self.heroHp = random.randint(1,10)
 
@@ -163,7 +172,7 @@ class GameWidget(Widget):
 
     def move_step(self, dt):
         cur_x, cur_y = self.hero1.position
-
+        self.heroHp = random.randint(1,10)
         step = 1#100 * dt  # //add the speed here
         if 'w' in self.pressed_keys:
             cur_y += step
@@ -257,7 +266,7 @@ class MyApp(App):
         game = bgLayout.game_widget
         Clock.schedule_interval(game.move_bullets, 1/60)  
         Clock.schedule_interval(game.move_enemys, 1/60) 
-        
+        Clock.schedule_interval(bgLayout.update_health_bar, 1/60)
         return bgLayout
 
 if __name__ == '__main__':
