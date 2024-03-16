@@ -6,6 +6,8 @@ from kivy.clock import Clock
 from kivy.core.audio import SoundLoader
 from kivy.vector import Vector
 import math
+import random
+
 
 class allMovingEntity:
     def __init__(self, x,y, speed):
@@ -56,15 +58,15 @@ class GameWidget(Widget):
         self.hero1 = allMovingEntity((window_width - hero_width) / 2,(window_height - hero_height) / 2, 100)
         
         with self.canvas:
-            self.hero = Rectangle(source='hero.png', pos=(self.hero_x, self.hero_y), size=(50, 50))
+            self.hero = Rectangle(source='asset/Tanks/tankBlue.png', pos=(self.hero_x, self.hero_y), size=(50, 50))
 
         self.bullets = []
         self.enemys = []
         ENEMY_TANK_NUMBER = 2
         for i in range(ENEMY_TANK_NUMBER):
-            enemyTank = allMovingEntity(100,100,50)
-            enemyColor = Rectangle(source='hero.png', pos=(enemyTank.posX, enemyTank.posY), size=(50, 50))
-            target = [200,200]
+            enemyTank = allMovingEntity(random.randint(100,400),random.randint(100,400),50)
+            enemyColor = Rectangle(source='asset/Tanks/tankRed.png', pos=(enemyTank.posX, enemyTank.posY), size=(50, 50))
+            target = [10,10]
             self.enemys.append((enemyTank, enemyColor,target))
             self.canvas.add(enemyColor)
 
@@ -110,7 +112,7 @@ class GameWidget(Widget):
             start_pos = (self.hero1.posX + 20, self.hero1.posY + 20)
 
             #create bullet
-            bullet = Rectangle(source='bullet.png', pos=start_pos, size=(10, 10))
+            bullet = Rectangle(source='asset/Bullets/bulletSilverSilver_outline.png', pos=start_pos, size=(10, 10))
             self.bullets.append((bullet, direction))  # Store bullet and its direction
             self.canvas.add(bullet)
     
@@ -120,6 +122,7 @@ class GameWidget(Widget):
 
     def move_enemys(self, dt):
          for enemy, enemyRect,targetPos in self.enemys:
+            targetPos = [self.hero1.posX,self.hero1.posY]
             enemy.moveTo(targetPos[0], targetPos[1],1/60)
             enemyRect.pos = enemy.position
             
