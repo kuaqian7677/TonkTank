@@ -8,23 +8,24 @@ from kivy.vector import Vector
 import math
 
 class allMovingEntity:
-    def __init__(self, x,y):
+    def __init__(self, x,y, speed):
         self.posX = x
         self.posY = y
         self.position = (self.posX, self.posY)
-        self.speed = 100
+        self.speed = speed
 
     def moveTo(self, x, y, ms):
         diffy = y - self.posY
         diffx = x - self.posX 
         print(diffx, diffy)
-
+        
 
         direction = Vector(x,y) - Vector(self.posX, self.posY)
         direction = direction.normalize()
         self.position = Vector(self.position) + direction * self.speed * ms
         self.posX = self.position[0]
         self.posY = self.position[1]
+        print(self.position)
         return self.position
 
 
@@ -52,12 +53,21 @@ class GameWidget(Widget):
         self.hero_x = (window_width - hero_width) / 2
         self.hero_y = (window_height - hero_height) / 2
 
-        self.hero1 = allMovingEntity((window_width - hero_width) / 2,(window_height - hero_height) / 2)
+        self.hero1 = allMovingEntity((window_width - hero_width) / 2,(window_height - hero_height) / 2, 100)
         
         with self.canvas:
             self.hero = Rectangle(source='hero.png', pos=(self.hero_x, self.hero_y), size=(50, 50))
 
         self.bullets = []
+        self.enemys = []
+        ENEMY_TANK_NUMBER = 2
+        for i in range(ENEMY_TANK_NUMBER):
+            enemyTank = allMovingEntity(100,100,50)
+            enemyColor = Rectangle(source='hero.png', pos=(enemyTank.posX, enemyTank.posY), size=(50, 50))
+            target = [200,200]
+            self.enemys.append((enemyTank, enemyColor,target))
+            self.canvas.add(enemyColor)
+
 
     def _on_keyboard_closed(self):
         self._keyboard.unbind(on_key_down=self._on_key_down)
@@ -106,7 +116,13 @@ class GameWidget(Widget):
     
     def move_bullets(self, dt):
         for bullet, direction in self.bullets:
-            bullet.pos = Vector(*bullet.pos) + direction * 300 * dt  # adjust bullet speed here
+            bullet.pos = Vector(*bullet.pos) + direction * 600 * dt  # adjust bullet speed here
+
+    def move_enemys(self, dt):
+         for enemy, enemyRect,targetPos in self.enemys:
+            enemy.moveTo(targetPos[0], targetPos[1],1/60)
+            enemyRect.pos = enemy.position
+            
 
     def on_motion(self, etype, me):
         # will receive all motion events.
@@ -124,6 +140,7 @@ class MyApp(App):
     def build(self):
         game = GameWidget()
         Clock.schedule_interval(game.move_bullets, 1/60)  
+        Clock.schedule_interval(game.move_enemys, 1/60)  
         return game
 
 if __name__ == '__main__':
