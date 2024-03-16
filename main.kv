@@ -1,0 +1,18 @@
+<Tank>:
+    size: 50, 50
+    canvas:
+        # Ellipse:
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+<BackGround>:
+    canvas.before:
+        Color:
+            rgba:(1,0,0,0)
+        Rectangle:
+            source:"asset/Environment/grass.png"
+            size: root.width, root.height
+            pos: self.pos
+
+        

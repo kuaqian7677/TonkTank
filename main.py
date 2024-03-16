@@ -5,6 +5,8 @@ from kivy.core.window import Window
 from kivy.clock import Clock
 from kivy.core.audio import SoundLoader
 from kivy.vector import Vector
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.image import Image
 
 from kivy.graphics.context_instructions import PopMatrix, PushMatrix, Transform, Rotate
 
@@ -54,6 +56,28 @@ class allMovingEntity:
         #print(self.position)
         return self.position
 
+class BackGround(Widget):
+    pass
+
+class BackgroundLayout(BoxLayout):
+    def __init__(self, **kwargs):
+        super(BackgroundLayout, self).__init__(**kwargs)
+        self.orientation = 'vertical'
+        
+        # Load the background image
+        with self.canvas.before:
+            self.bg = Image(source='asset/Environment/grass.png').texture
+            self.rect = Rectangle(size=self.size, pos=self.pos, texture=self.bg)
+            self.bind(size=self._update_rect, pos=self._update_rect)
+        
+        # Add GameWidget as a child
+        self.game_widget = GameWidget()
+        self.add_widget(self.game_widget)
+
+    def _update_rect(self, instance, value):
+        self.rect.size = self.size
+        self.rect.pos = self.pos
+
 class GameWidget(Widget):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -93,6 +117,7 @@ class GameWidget(Widget):
                 PopMatrix()
             target = [10,10]
             self.enemys.append((enemyTank, enemyColor,target))
+        
 
 
     def _on_keyboard_closed(self):
@@ -199,12 +224,15 @@ class GameWidget(Widget):
  
     Window.bind(on_motion=on_motion)
 
+
 class MyApp(App):
     def build(self):
-        game = GameWidget()
+        bgLayout = BackgroundLayout()
+        game = bgLayout.game_widget
         Clock.schedule_interval(game.move_bullets, 1/60)  
-        Clock.schedule_interval(game.move_enemys, 1/60)  
-        return game
+        Clock.schedule_interval(game.move_enemys, 1/60) 
+        
+        return bgLayout
 
 if __name__ == '__main__':
     app = MyApp()
