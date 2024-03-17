@@ -186,7 +186,10 @@ class GameWidget(Widget):
         self._keyboard.bind(on_key_down=self._on_key_down)
         self._keyboard.bind(on_key_up=self._on_key_up)
         self.pressed_keys = set()
-        Clock.schedule_interval(self.move_step, 0)
+        self.hero_speed = 200  # Set the default hero speed
+        self.initial_hero_speed = self.hero_speed  # Store initial hero speed
+        self.move_clock_event = None  # Initialize move clock event
+        self.start_move_clock()
 
         self.sound = SoundLoader.load('test.mp3')
         self.sound.play()
@@ -296,7 +299,7 @@ class GameWidget(Widget):
     def move_step(self, dt):
         cur_x, cur_y = self.hero1.position
         #self.heroHp = random.randint(1,10) --Debugging Hp Bar
-        step = 1#100 * dt  # //add the speed here
+        step = self.hero_speed * dt #100 * dt  # //add the speed here
         if 'w' in self.pressed_keys:
             cur_y += step
         if 's' in self.pressed_keys:
@@ -417,6 +420,7 @@ class GameWidget(Widget):
         self.maxHp = 10
         self.heroDamage = 5
         self.heroShield = 0
+        self.hero_speed = self.initial_hero_speed 
         
         # Clear lists of bullets, enemy bullets, enemies, explosive effects, and random buffs
         self.bullets = []
@@ -427,10 +431,15 @@ class GameWidget(Widget):
 
         # Clear canvas of all remaining elements
         self.canvas.clear()
+        if self.move_clock_event:
+            self.move_clock_event.cancel()
 
         # Call any necessary methods to initialize the game again
         self.__init__()
 
+    def start_move_clock(self):
+        # Start the clock event for hero movement
+        self.move_clock_event = Clock.schedule_interval(self.move_step, 1/60)
 
     def detect_collision(self, rect1, rect2):
         x1, y1 = rect1.pos
