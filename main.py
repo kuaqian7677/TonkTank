@@ -11,7 +11,7 @@ from kivy.uix.progressbar import ProgressBar
 from kivy.uix.floatlayout import FloatLayout
 from kivy.utils import get_color_from_hex
 from kivy.uix.label import Label
-from kivy.uix.button import Button
+from kivy.clock import Clock
 
 from kivy.graphics.context_instructions import PopMatrix, PushMatrix, Transform, Rotate
 
@@ -19,22 +19,6 @@ import math
 import random
 import time 
 
-class StartMenu(BoxLayout):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        
-        # Define the layout of the start menu
-        self.orientation = 'vertical'
-        self.start_button = Button(text='Start Game', size_hint=(None, None), size=(200, 100))
-        self.start_button.bind(on_press=self.start_game)
-        self.add_widget(self.start_button)
-    
-    def start_game(self, instance):
-        # Remove the start menu from the screen
-        self.parent.remove_widget(self)
-        # Initialize and add the game widget to the screen
-        game_widget = GameWidget()
-        self.parent.add_widget(game_widget)
 
 class allMovingEntity:
     def __init__(self, x,y, speed):
@@ -81,6 +65,11 @@ hpBarsizeX = 100
 hpBarOffsetY = 80
 heroSize = 50
 
+class Coin:
+    def __init__(self, position):
+        self.position = position
+        self.score_value = 100
+
 class BackgroundLayout(BoxLayout):
     def __init__(self, **kwargs):
         super(BackgroundLayout, self).__init__(**kwargs)
@@ -88,7 +77,10 @@ class BackgroundLayout(BoxLayout):
         super(BackgroundLayout, self).__init__(**kwargs)
         self.timer_label = Label(text="Timer: 0", size_hint=(None, None), size=(100, 40), font_size=20)
         self.add_widget(self.timer_label)
-        
+
+        self.coins = []
+        Clock.schedule_interval(self.spawn_coin, 2)
+
         # Load the background image
         with self.canvas.before:
             self.bg = Image(source='asset/Environment/grass.png').texture
@@ -131,7 +123,23 @@ class BackgroundLayout(BoxLayout):
         
         #self.health_bar = ProgressBar(max=10, size_hint=(None, None), size=(200, 20), pos_hint={'x': 0.5, 'y': 0.05}) 
         #self.health_bar_layout.add_widget(self.health_bar)
+
+    def random_position(self):
+        window_width, window_height = Window.size
+        x = random.randint(0, window_width - 50)
+        y = random.randint(0, window_height - 50)
+        return (x, y)
         
+    def spawn_coin(self, dt):
+        # Randomly generate coin position
+        coin_pos = self.random_position()
+        # Create a coin object
+        coin = Coin(coin_pos)
+        # Add coin to the coins list
+        self.coins.append(coin)
+        # Add coin to canvas
+        with self.canvas:
+            self.coin_rect = Rectangle(source='asset/Bullets/coin.png', pos=coin_pos, size=(25, 25))
 
     def _update_rect(self, instance, value):
         self.rect.size = self.size
@@ -239,6 +247,17 @@ class GameWidget(Widget):
             self.canvas.add(newEnemy.enemyRect)
             self.enemys.append(newEnemy)
         Clock.schedule_interval(self.playExplosion, 1/30)
+    
+    def collect_coins(self):
+        # Collision detection between player and coins
+        for coin in self.parent.coins:
+            if self.detect_collision(self.hero, coin.position):
+                # Increase score
+                self.parent.score += coin.score_value
+                # Remove coin from canvas and coins list
+                self.parent.canvas.remove(self.parent.coin_rect)
+                self.parent.coins.remove(coin)
+                # Optionally, play a sound effect for collecting coins
 
     def randomGeneratePosition(self, g):
         topOrSide = random.randint(1,2)
@@ -327,6 +346,7 @@ class GameWidget(Widget):
             cur_x += step
         self.hero1.moveTo(cur_x, cur_y,1/60)
         self.hero.pos = self.hero1.position
+        self.collect_coins()
         #print(self.hero1.position)
         #self.hero.pos = (cur_x, cur_y)
 
