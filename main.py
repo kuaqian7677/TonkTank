@@ -137,13 +137,14 @@ class BackgroundLayout(BoxLayout):
         self.score_label.pos = (window_width/2 -50, window_height - 40)
 
 class Enemy:
-    def __init__(self, startPosition, image, size, hp ,firerate):
-        self.enemyTank = allMovingEntity(startPosition[0],startPosition[1],50)
-        self.enemyRect = Rectangle(source='asset/Tanks/tankRed2.png', pos=(self.enemyTank.posX, self.enemyTank.posY), size=(50, 50))
+    def __init__(self, startPosition, image, size, hp ,firerate, speed, bulletSpeed):
+        self.enemyTank = allMovingEntity(startPosition[0],startPosition[1],speed)
+        self.enemyRect = Rectangle(source=image, pos=(self.enemyTank.posX, self.enemyTank.posY), size=(size, size))
         self.hp = hp
         self.firerate = firerate
         self.lastShot = time.time() 
         self.score = 10
+        self.bulletSpeed = bulletSpeed
         print("Created enemy")
 
 class Explosive:
@@ -179,6 +180,7 @@ class GameWidget(Widget):
         self.hero1 = allMovingEntity((window_width - hero_width) / 2,(window_height - hero_height) / 2, 100)
         self.heroHp = 10
         self.score = 0
+        self.heroDamage = 5
 
         with self.canvas:
             self.hero = Rectangle(source='asset/Tanks/tankBlue2.png', pos=(self.hero_x, self.hero_y), size=(heroSize, heroSize))
@@ -187,9 +189,9 @@ class GameWidget(Widget):
         self.enemyBullets = []
         self.enemys = []
         self.explosiveEffect = []
-        ENEMY_TANK_NUMBER = 3
+        ENEMY_TANK_NUMBER = 0
         for i in range(ENEMY_TANK_NUMBER):
-            newEnemy = Enemy(self.randomGeneratePosition("Null"),"image", 50, 10,0.5) # Enemy(startPosition, image, size, health, firerate) --setting new enemy here
+            newEnemy = Enemy(self.randomGeneratePosition("Null"),"image", 50, 10,0.9, 40, 100) # Enemy(startPosition, image, size, health, firerate) --setting new enemy here
             self.canvas.add(newEnemy.enemyRect)
             self.enemys.append(newEnemy)
         Clock.schedule_interval(self.playExplosion, 1/30)
@@ -213,7 +215,21 @@ class GameWidget(Widget):
     def spawnEnemy(self, dt):
         newpos = self.randomGeneratePosition("Null")
         print(newpos)
-        newEnemy = Enemy(newpos,"image", 50, 10,0.5) # Enemy(startPosition, image, size, health, firerate) --setting new enemy here
+        newEnemy = Enemy(newpos,'asset/Tanks/tankRed2.png', 50, 10,0.5, 40, 100) # Enemy(startPosition, image, size, health, firerate, speed, bullet speed) --setting new enemy here
+        self.canvas.add(newEnemy.enemyRect)
+        self.enemys.append(newEnemy)
+
+    def spawnEnemyRed(self, dt):
+        newpos = self.randomGeneratePosition("Null")
+        print(newpos)
+        newEnemy = Enemy(newpos,'asset/Tanks/tankRed2.png', 50, 10,0.5, 40, 100) # Enemy(startPosition, image, size, health, firerate, speed, bullet speed) --setting new enemy here
+        self.canvas.add(newEnemy.enemyRect)
+        self.enemys.append(newEnemy)
+
+    def spawnEnemyGreen(self, dt):
+        newpos = self.randomGeneratePosition("Null")
+        print(newpos)
+        newEnemy = Enemy(newpos,'asset/Tanks/tankGreen2.png', 40, 10,1, 10, 300) # Enemy(startPosition, image, size, health, firerate, speed, bullet speed) --setting new enemy here
         self.canvas.add(newEnemy.enemyRect)
         self.enemys.append(newEnemy)
 
@@ -291,7 +307,7 @@ class GameWidget(Widget):
             #create bullet
         bullet = Rectangle(source='asset/Bullets/bulletRed2.png', pos=start_pos, size=(10, 10))
             # Add rotation instruction
-        bulletSpeed = 200
+        bulletSpeed = enemyEntity.bulletSpeed
         rotation_angle = 0  # Set your desired rotation angle here
         with self.canvas:
             PushMatrix()
@@ -317,7 +333,7 @@ class GameWidget(Widget):
 
                     self.canvas.remove(bullet)
                     self.bullets.remove((bullet, direction))
-                    enemy.hp -= 5
+                    enemy.hp -= self.heroDamage
 
                     if enemy.hp <= 0:
                         # Remove enemy from the canvas and enemy list
@@ -388,10 +404,13 @@ class MyApp(App):
     def build(self):
         bgLayout = BackgroundLayout()
         game = bgLayout.game_widget
+
+
         Clock.schedule_interval(game.move_bullets, 1/60)  
         Clock.schedule_interval(game.move_enemys, 1/60) 
         Clock.schedule_interval(bgLayout.update_Player_Stats, 1/60)
-        Clock.schedule_interval(game.spawnEnemy, 1)
+        Clock.schedule_interval(game.spawnEnemyRed, 1)
+        Clock.schedule_interval(game.spawnEnemyGreen, 1.5)
         return bgLayout
 
 if __name__ == '__main__':
