@@ -11,7 +11,7 @@ from kivy.uix.progressbar import ProgressBar
 from kivy.uix.floatlayout import FloatLayout
 from kivy.utils import get_color_from_hex
 from kivy.uix.label import Label
-from kivy.clock import Clock
+from kivy.uix.button import Button
 
 from kivy.graphics.context_instructions import PopMatrix, PushMatrix, Transform, Rotate
 
@@ -19,6 +19,22 @@ import math
 import random
 import time 
 
+class StartMenu(BoxLayout):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        
+        # Define the layout of the start menu
+        self.orientation = 'vertical'
+        self.start_button = Button(text='Start Game', size_hint=(None, None), size=(200, 100))
+        self.start_button.bind(on_press=self.start_game)
+        self.add_widget(self.start_button)
+    
+    def start_game(self, instance):
+        # Remove the start menu from the screen
+        self.parent.remove_widget(self)
+        # Initialize and add the game widget to the screen
+        game_widget = GameWidget()
+        self.parent.add_widget(game_widget)
 
 class allMovingEntity:
     def __init__(self, x,y, speed):
@@ -72,6 +88,7 @@ class BackgroundLayout(BoxLayout):
         super(BackgroundLayout, self).__init__(**kwargs)
         self.timer_label = Label(text="Timer: 0", size_hint=(None, None), size=(100, 40), font_size=20)
         self.add_widget(self.timer_label)
+        
         # Load the background image
         with self.canvas.before:
             self.bg = Image(source='asset/Environment/grass.png').texture
