@@ -11,7 +11,8 @@ from kivy.uix.progressbar import ProgressBar
 from kivy.uix.floatlayout import FloatLayout
 from kivy.utils import get_color_from_hex
 from kivy.uix.label import Label
-from kivy.clock import Clock
+from kivy.uix.button import Button
+from kivy.properties import NumericProperty
 
 from kivy.graphics.context_instructions import PopMatrix, PushMatrix, Transform, Rotate
 
@@ -19,6 +20,8 @@ import math
 import random
 import time 
 
+class RestartButton(Button):
+    pass
 
 class allMovingEntity:
     def __init__(self, x,y, speed):
@@ -145,6 +148,10 @@ class BackgroundLayout(BoxLayout):
 
         self.force_field.pos = (self.game_widget.hero1.posX - 20, self.game_widget.hero1.posY - 20)
 
+        self.game_widget.game_over_check()
+        if self.game_widget.game_over == 1:
+            self.game_widget.on_game_over(self.game_widget, 1)
+
 class Enemy:
     def __init__(self, startPosition, image, size, hp ,firerate, speed, bulletSpeed, damage, bs):
         self.enemyTank = allMovingEntity(startPosition[0],startPosition[1],speed)
@@ -180,8 +187,12 @@ class RandomBuff:
 
 
 class GameWidget(Widget):
+    game_over = NumericProperty(0)
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.game_over = 0 
+
         self._keyboard = Window.request_keyboard(self._on_keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_key_down)
         self._keyboard.bind(on_key_up=self._on_key_up)
@@ -219,6 +230,48 @@ class GameWidget(Widget):
             self.canvas.add(newEnemy.enemyRect)
             self.enemys.append(newEnemy)
         Clock.schedule_interval(self.playExplosion, 1/30)
+
+    def game_over_check(self):
+        if self.heroHp <= 0:
+            print("GAME OVER")
+            self.game_over = 1
+    
+    def restart_game(self):
+        # Reset game variables
+        self.heroHp = 10
+        self.maxHp = 10
+        self.score = 0
+        self.heroDamage = 5
+        self.heroShield = 0
+        Clock.unschedule(self.move_bullets)
+        Clock.unschedule(self.move_enemys)
+        Clock.unschedule(bgLayout.update_Player_Stats)
+        Clock.unschedule(self.generateRandomBuff)
+        Clock.unschedule(self.spawnEnemyRed)
+        Clock.unschedule(self.spawnEnemyGreen)
+
+        self.remove_widget(restart_button)
+
+        for enemy in self.enemys:
+            self.canvas.remove(enemy.enemyRect)
+        self.enemys.clear()
+        self.bullets.clear()
+        self.enemyBullets.clear()
+        self.explosiveEffect.clear()
+        self.randomBuff.clear()
+
+        self.game_over = 0
+
+    def on_game_over(self, instance, value):
+        if value == 1:
+            restart_button = RestartButton(text="Restart", size_hint=(None, None), size=(100, 50), pos=(self.screen_Width / 2 - 50, self.screen_Height / 2 - 25))
+            restart_button.bind(on_release=self.restart_game)
+            self.add_widget(restart_button)
+        elif value == 0:
+            # Remove restart button if game is not over
+            restart_button = self.ids.get('restart_button', None)
+            if restart_button:
+                self.remove_widget(restart_button)
 
     def randomGeneratePosition(self, g):
         topOrSide = random.randint(1,2)
