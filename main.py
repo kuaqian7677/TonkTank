@@ -189,6 +189,7 @@ class GameWidget(Widget):
         self.initial_hero_speed = self.hero_speed  # Store initial hero speed
         self.move_clock_event = None  # Initialize move clock event
         self.start_move_clock()
+        self.hitsound = SoundLoader.load('sound/osu-hit-sound.mp3')
 
         self.sound = SoundLoader.load('test.mp3')
         self.sound.play()
@@ -203,7 +204,7 @@ class GameWidget(Widget):
         self.hero1 = allMovingEntity((window_width - hero_width) / 2,(window_height - hero_height) / 2, 100)
         self.heroHp = 10
         self.maxHp = 10
-        self.score = 0
+        self.score = 0aaas
         self.heroDamage = 5
         self.heroShield = 0
 
@@ -364,12 +365,16 @@ class GameWidget(Widget):
             # Check for collisions between bullet and enemies
             for enemy in self.enemys:
                 if self.detect_collision(bullet, enemy.enemyRect):
+                    if self.hitsound:
+                        self.hitsound.volume = 0.25
+                        self.hitsound.play()
                     # Remove bullet from the canvas
                     newExplosion = Explosive(self.canvas, bullet.pos, "Image", 50)
                     self.explosiveEffect.append(newExplosion)
                     self.canvas.remove(bullet)
                     self.bullets.remove((bullet, direction))
                     enemy.hp -= self.heroDamage
+                    
 
                     if enemy.hp <= 0:
                         # Remove enemy from the canvas and enemy list
@@ -490,6 +495,7 @@ class MyApp(App):
     def build(self):
         self.bg_music = SoundLoader.load('sound/Demo Song.mp3')
         if self.bg_music:
+            self.bg_music.volume = 0.25
             self.bg_music.loop = True  # Loop the background music
             self.bg_music.play()
         bgLayout = BackgroundLayout()
