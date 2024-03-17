@@ -103,7 +103,7 @@ class BackgroundLayout(BoxLayout):
             self.health_foreground = Rectangle(pos= self.game_widget.hero1.position, size=(0, 20))
         
         # Label for HP text
-        self.hp_label = Label(text=f'HP: {self.game_widget.heroHp}', pos=self.health_background.pos, size=(0, 20))
+        self.hp_label = Label(text=f'HP: {self.game_widget.heroHp}', pos=self.health_background.pos, size=(0, 20),font_size=40)
         self.health_bar_layout.add_widget(self.hp_label)
         
         self.update_health_bar(10)
@@ -167,19 +167,9 @@ class GameWidget(Widget):
         self.enemys = []
         ENEMY_TANK_NUMBER = 3
         for i in range(ENEMY_TANK_NUMBER):
-            newEnemy = Enemy((10,10),"image", 50, 10,0.1)
+            newEnemy = Enemy((10,10),"image", 50, 10,0.5) # Enemy(startPosition, image, size, health, firerate) --setting new enemy here
             self.canvas.add(newEnemy.enemyRect)
             self.enemys.append(newEnemy)
-            # enemyTank = allMovingEntity(random.randint(50,500),random.randint(50,500),50)  #(Pos, Pos, Speed)
-            # with self.canvas:
-            #     PushMatrix()
-            #     enemyColor = Rectangle(source='asset/Tanks/tankRed2.png', pos=(enemyTank.posX, enemyTank.posY), size=(50, 50))
-            #     Rotate(angle=100)
-            #     PopMatrix()
-            # enemyHp = 2
-            # self.enemys.append((enemyTank, enemyColor, enemyHp))
-            
-        
 
 
     def _on_keyboard_closed(self):
@@ -223,7 +213,7 @@ class GameWidget(Widget):
             start_pos = (self.hero1.posX + 20, self.hero1.posY + 20)
 
             #create bullet
-            bullet = Rectangle(source='asset/Bullets/bulletSilverSilver_outline.png', pos=start_pos, size=(10, 10))
+            bullet = Rectangle(source='asset/Bullets/bulletYellow2.png', pos=start_pos, size=(10, 10))
             # Add rotation instruction
 
             rotation_angle = 0  # Set your desired rotation angle here
@@ -241,13 +231,13 @@ class GameWidget(Widget):
             return
         else:
             enemyEntity.lastShot = time.time() 
-        direction = Vector(self.hero1.posX + 20, self.hero1.posY + 20) - Vector(enemyEntity.enemyTank.position)
+        direction = Vector(self.hero1.posX, self.hero1.posY ) - Vector(enemyEntity.enemyTank.position)
         direction = direction.normalize()
             # bullet start pos = hero's current pos
         start_pos = (enemyEntity.enemyTank.posX + 20, enemyEntity.enemyTank.posY + 20)
 
             #create bullet
-        bullet = Rectangle(source='asset/Bullets/bulletSilverSilver_outline.png', pos=start_pos, size=(10, 10))
+        bullet = Rectangle(source='asset/Bullets/bulletRed2.png', pos=start_pos, size=(10, 10))
             # Add rotation instruction
         bulletSpeed = 200
         rotation_angle = 0  # Set your desired rotation angle here
