@@ -64,6 +64,27 @@ hpBarsizeX = 100
 hpBarOffsetY = 80
 heroSize = 50
 
+class Coin:
+    def __init__(self, position):
+        self.position = position
+        self.size = (30, 30)  # Adjust size as needed
+        self.collected = False
+        self.rect = None  # Placeholder for the Rectangle object
+
+    def spawn(self, canvas):
+        # Method to spawn the coin on the canvas
+        self.canvas = canvas
+        with self.canvas:
+            self.rect = Rectangle(source='asset/Bullets/coin.png', pos=self.position, size=self.size)
+
+    def collect(self):
+        # Method to collect the coin
+        if not self.collected:
+            self.collected = True
+            self.canvas.remove(self.rect)
+            return True
+        return False
+
 class BackgroundLayout(BoxLayout):
     def __init__(self, **kwargs):
         super(BackgroundLayout, self).__init__(**kwargs)
@@ -176,8 +197,6 @@ class RandomBuff:
             self.buffRect = Rectangle(source="", pos=(startPosition[0],startPosition[1]), size=(1,1))
         print("Created buff")
 
-
-
 class GameWidget(Widget):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -190,6 +209,11 @@ class GameWidget(Widget):
         self.move_clock_event = None  # Initialize move clock event
         self.start_move_clock()
         self.hitsound = SoundLoader.load('sound/osu-hit-sound.mp3')
+        
+        
+
+        Clock.schedule_interval(self.spawn_coin, 2)  # Spawn a coin every 2 seconds
+        self.coins = []
 
         self.sound = SoundLoader.load('test.mp3')
         self.sound.play()
@@ -222,6 +246,22 @@ class GameWidget(Widget):
             self.canvas.add(newEnemy.enemyRect)
             self.enemys.append(newEnemy)
         Clock.schedule_interval(self.playExplosion, 1/30)
+
+    def spawn_coin(self, dt):
+            # Method to spawn a new coin
+            window_width, window_height = Window.size
+            coin_pos = (random.randint(0, window_width - 30), random.randint(0, window_height - 30))
+            coin = Coin(coin_pos)
+            coin.spawn(self.canvas)  # Pass the canvas object when spawning
+            self.coins.append(coin)
+
+    def collect_coins(self):
+            # Method to check for collisions between hero and coins and collect them
+            player_rect = self.hero  # Assuming hero is the player's Rectangle
+            for coin in self.coins:
+                if not coin.collected and self.detect_collision(player_rect, coin.rect):
+                    if coin.collect():
+                        self.score += 100  # Increase player's score by 100
 
     def randomGeneratePosition(self, g):
         topOrSide = random.randint(1,2)
@@ -310,6 +350,8 @@ class GameWidget(Widget):
             cur_x += step
         self.hero1.moveTo(cur_x, cur_y,1/60)
         self.hero.pos = self.hero1.position
+
+        self.collect_coins()
         #print(self.hero1.position)
         #self.hero.pos = (cur_x, cur_y)
 
