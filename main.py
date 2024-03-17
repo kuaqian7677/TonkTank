@@ -204,7 +204,7 @@ class GameWidget(Widget):
         self.hero1 = allMovingEntity((window_width - hero_width) / 2,(window_height - hero_height) / 2, 100)
         self.heroHp = 10
         self.maxHp = 10
-        self.score = 0aaas
+        self.score = 0
         self.heroDamage = 5
         self.heroShield = 0
 
