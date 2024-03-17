@@ -464,12 +464,12 @@ class MyApp(App):
         bgLayout = BackgroundLayout()
         game = bgLayout.game_widget
         self.elapsed_time = 0
-        Clock.schedule_interval(self.update_timer, 1)
 
+        Clock.schedule_interval(self.update_timer, 1)
         Clock.schedule_interval(game.move_bullets, 1/60)  
         Clock.schedule_interval(game.move_enemys, 1/60) 
         Clock.schedule_interval(bgLayout.update_Player_Stats, 1/60)
-        Clock.schedule_interval(game.generateRandomBuff, 2)
+        Clock.schedule_interval(game.generateRandomBuff, 10)
         Clock.schedule_interval(game.spawnEnemyRed, 2)
         Clock.schedule_interval(game.spawnEnemyGreen, 3)
         return bgLayout
