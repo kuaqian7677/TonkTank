@@ -116,6 +116,13 @@ class BackgroundLayout(BoxLayout):
         self.hp_label.text = f'HP: {self.game_widget.heroHp}'
         self.hp_label.pos=(10,10)
 
+class Enemy:
+    def __init__(self, startPosition, image, size, hp ,firerate):
+        self.enemyTank = allMovingEntity(random.randint(50,500),random.randint(50,500),50)
+        self.enemyRect = Rectangle(source='asset/Tanks/tankRed2.png', pos=(self.enemyTank.posX, self.enemyTank.posY), size=(50, 50))
+        print("Created enemy")
+
+
 class GameWidget(Widget):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -147,14 +154,17 @@ class GameWidget(Widget):
         self.enemys = []
         ENEMY_TANK_NUMBER = 3
         for i in range(ENEMY_TANK_NUMBER):
-            enemyTank = allMovingEntity(random.randint(50,500),random.randint(50,500),50)  #(Pos, Pos, Speed)
-            with self.canvas:
-                PushMatrix()
-                enemyColor = Rectangle(source='asset/Tanks/tankRed2.png', pos=(enemyTank.posX, enemyTank.posY), size=(50, 50))
-                Rotate(angle=100)
-                PopMatrix()
-            enemyHp = 2
-            self.enemys.append((enemyTank, enemyColor, enemyHp))
+            newEnemy = Enemy((10,10),"image", 50, 10,3)
+            self.canvas.add(newEnemy.enemyRect)
+            self.enemys.append(newEnemy)
+            # enemyTank = allMovingEntity(random.randint(50,500),random.randint(50,500),50)  #(Pos, Pos, Speed)
+            # with self.canvas:
+            #     PushMatrix()
+            #     enemyColor = Rectangle(source='asset/Tanks/tankRed2.png', pos=(enemyTank.posX, enemyTank.posY), size=(50, 50))
+            #     Rotate(angle=100)
+            #     PopMatrix()
+            # enemyHp = 2
+            # self.enemys.append((enemyTank, enemyColor, enemyHp))
             
         
 
@@ -215,10 +225,10 @@ class GameWidget(Widget):
 
     def enemyShoot(self,enemyEntity ):
         print(enemyEntity)
-        direction = Vector(self.hero1.posX + 20, self.hero1.posY + 20) - Vector(enemyEntity.position)
+        direction = Vector(self.hero1.posX + 20, self.hero1.posY + 20) - Vector(enemyEntity.enemyTank.position)
         direction = direction.normalize()
             # bullet start pos = hero's current pos
-        start_pos = (enemyEntity.posX + 20, enemyEntity.posY + 20)
+        start_pos = (enemyEntity.enemyTank.posX + 20, enemyEntity.enemyTank.posY + 20)
 
             #create bullet
         bullet = Rectangle(source='asset/Bullets/bulletSilverSilver_outline.png', pos=start_pos, size=(10, 10))
@@ -231,6 +241,8 @@ class GameWidget(Widget):
             self.canvas.add(bullet)
             PopMatrix()
         # Append bullet and its direction
+        
+        #Fire rate
         self.enemyBullets.append((bullet, direction))
     
     def move_bullets(self, dt):
@@ -238,15 +250,15 @@ class GameWidget(Widget):
             bullet.pos = Vector(*bullet.pos) + direction * 600 * dt  # adjust bullet speed here
             
             # Check for collisions between bullet and enemies
-            for enemy, enemyRect, hp in self.enemys:
-                if self.detect_collision(bullet, enemyRect):
+            for enemy in self.enemys:
+                if self.detect_collision(bullet, enemy.enemyRect):
                     # Remove bullet from the canvas
                     self.canvas.remove(bullet)
                     self.bullets.remove((bullet, direction))
                     
                     # Remove enemy from the canvas and enemy list
-                    self.canvas.remove(enemyRect)
-                    self.enemys.remove((enemy, enemyRect, hp))
+                    self.canvas.remove(enemy.enemyRect)
+                    self.enemys.remove(enemy)
                     break 
         for bullet, direction in self.enemyBullets:
             bullet.pos = Vector(*bullet.pos) + direction * 600 * dt  # adjust bullet speed here
@@ -263,13 +275,13 @@ class GameWidget(Widget):
         return False
 
     def move_enemys(self, dt):
-        for i, (enemy1, enemyRect1, hp) in enumerate(self.enemys):
+        for i, enemy1 in enumerate(self.enemys):
             
-            enemy1.moveTo(self.hero1.posX, self.hero1.posY, 1 / 60)
-            enemyRect1.pos = enemy1.position
+            enemy1.enemyTank.moveTo(self.hero1.posX, self.hero1.posY, 1 / 60)
+            enemy1.enemyRect.pos = enemy1.enemyTank.position
             self.enemyShoot(enemy1)
-            for j, (enemy2, enemyRect2, hp) in enumerate(self.enemys):
-                if i != j and self.detect_collision(enemyRect1, enemyRect2):
+            for j, enemy2 in enumerate(self.enemys):
+                if i != j and self.detect_collision(enemy1.enemyRect, enemy2.enemyRect):
                     # Collision detected, but do not take any action
                     pass
 
