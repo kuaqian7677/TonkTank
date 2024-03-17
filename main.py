@@ -71,6 +71,7 @@ class Coin:
         self.collected = False
         self.rect = None  # Placeholder for the Rectangle object
         self.spawn_time = time.time() 
+        self.collect_sound = SoundLoader.load('sound/collect_sound.mp3')  # Load the collect sound file
 
     def spawn(self, canvas):
         # Method to spawn the coin on the canvas
@@ -82,6 +83,9 @@ class Coin:
         # Method to collect the coin
         if not self.collected:
             self.collected = True
+            if self.collect_sound:
+                self.collect_sound.volume = 0.1
+                self.collect_sound.play()  # Play the collect sound
             self.canvas.remove(self.rect)
             return True
         return False
