@@ -16,6 +16,7 @@ from kivy.graphics.context_instructions import PopMatrix, PushMatrix, Transform,
 
 import math
 import random
+import time 
 
 
 class allMovingEntity:
@@ -120,6 +121,9 @@ class Enemy:
     def __init__(self, startPosition, image, size, hp ,firerate):
         self.enemyTank = allMovingEntity(random.randint(50,500),random.randint(50,500),50)
         self.enemyRect = Rectangle(source='asset/Tanks/tankRed2.png', pos=(self.enemyTank.posX, self.enemyTank.posY), size=(50, 50))
+        self.hp = hp
+        self.firerate = firerate
+        self.lastShot = time.time() 
         print("Created enemy")
 
 
@@ -154,7 +158,7 @@ class GameWidget(Widget):
         self.enemys = []
         ENEMY_TANK_NUMBER = 3
         for i in range(ENEMY_TANK_NUMBER):
-            newEnemy = Enemy((10,10),"image", 50, 10,3)
+            newEnemy = Enemy((10,10),"image", 50, 10,1)
             self.canvas.add(newEnemy.enemyRect)
             self.enemys.append(newEnemy)
             # enemyTank = allMovingEntity(random.randint(50,500),random.randint(50,500),50)  #(Pos, Pos, Speed)
@@ -225,6 +229,10 @@ class GameWidget(Widget):
 
     def enemyShoot(self,enemyEntity ):
         print(enemyEntity)
+        if (time.time() - enemyEntity.lastShot) <= enemyEntity.firerate:
+            return
+        else:
+            enemyEntity.lastShot = time.time() 
         direction = Vector(self.hero1.posX + 20, self.hero1.posY + 20) - Vector(enemyEntity.enemyTank.position)
         direction = direction.normalize()
             # bullet start pos = hero's current pos
