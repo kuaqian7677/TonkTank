@@ -142,7 +142,7 @@ class BackgroundLayout(BoxLayout):
         self.force_field.pos = (self.game_widget.hero1.posX - 20, self.game_widget.hero1.posY - 20)
 
 class Enemy:
-    def __init__(self, startPosition, image, size, hp ,firerate, speed, bulletSpeed):
+    def __init__(self, startPosition, image, size, hp ,firerate, speed, bulletSpeed, damage, bs):
         self.enemyTank = allMovingEntity(startPosition[0],startPosition[1],speed)
         self.enemyRect = Rectangle(source=image, pos=(self.enemyTank.posX, self.enemyTank.posY), size=(size, size))
         self.hp = hp
@@ -150,6 +150,8 @@ class Enemy:
         self.lastShot = time.time() 
         self.score = 10
         self.bulletSpeed = bulletSpeed
+        self.damage = damage
+        self.bulletSize = bs
         print("Created enemy")
 
 class Explosive:
@@ -168,7 +170,7 @@ class RandomBuff:
         elif buffId == 2:
             self.buffRect = Rectangle(source="asset/Bullets/wrenchRepair.png", pos=(startPosition[0],startPosition[1]), size=(40,40))
         else:
-            self.buffRect = Rectangle(source="", pos=(startPosition[0],startPosition[1]), size=(40,40))
+            self.buffRect = Rectangle(source="", pos=(startPosition[0],startPosition[1]), size=(1,1))
         print("Created buff")
 
 
@@ -247,14 +249,14 @@ class GameWidget(Widget):
     def spawnEnemyRed(self, dt):
         newpos = self.randomGeneratePosition("Null")
         print(newpos)
-        newEnemy = Enemy(newpos,'asset/Tanks/tankRed2.png', 50, 10,1, 40, 100) # Enemy(startPosition, image, size, health, firerate, speed, bullet speed) --setting new enemy here
+        newEnemy = Enemy(newpos,'asset/Tanks/tankRed2.png', 50, 10,1, 40, 100,1, 10) # Enemy(startPosition, image, size, health, firerate, speed, bullet speed, damage) --setting new enemy here
         self.canvas.add(newEnemy.enemyRect)
         self.enemys.append(newEnemy)
 
     def spawnEnemyGreen(self, dt):
         newpos = self.randomGeneratePosition("Null")
         print(newpos)
-        newEnemy = Enemy(newpos,'asset/Tanks/tankGreen2.png', 70, 40,3, 10, 50) # Enemy(startPosition, image, size, health, firerate, speed, bullet speed) --setting new enemy here
+        newEnemy = Enemy(newpos,'asset/Tanks/tankGreen2.png', 70, 40,3, 10, 50,2, 15) # Enemy(startPosition, image, size, health, firerate, speed, bullet speed) --setting new enemy here
         self.canvas.add(newEnemy.enemyRect)
         self.enemys.append(newEnemy)
     
@@ -337,7 +339,7 @@ class GameWidget(Widget):
         start_pos = (enemyEntity.enemyTank.posX + 20, enemyEntity.enemyTank.posY + 20)
 
             #create bullet
-        bullet = Rectangle(source='asset/Bullets/bulletRed2.png', pos=start_pos, size=(10, 10))
+        bullet = Rectangle(source='asset/Bullets/bulletRed2.png', pos=start_pos, size=(enemyEntity.bulletSize, enemyEntity.bulletSize))
             # Add rotation instruction
         bulletSpeed = enemyEntity.bulletSpeed
         rotation_angle = 0  # Set your desired rotation angle here
@@ -347,7 +349,8 @@ class GameWidget(Widget):
             self.canvas.add(bullet)
             PopMatrix()
         # Append bullet and its direction
-        self.enemyBullets.append((bullet, direction, bulletSpeed))
+        damage = enemyEntity.damage
+        self.enemyBullets.append((bullet, direction, bulletSpeed, damage))
     
     def move_bullets(self, dt):
         for bullet, direction in self.bullets:
@@ -368,22 +371,22 @@ class GameWidget(Widget):
                         self.canvas.remove(enemy.enemyRect)
                         self.enemys.remove(enemy)
                     break 
-        for bullet, direction, bulletSpeed in self.enemyBullets:
+        for bullet, direction, bulletSpeed, damage in self.enemyBullets:
             bullet.pos = Vector(*bullet.pos) + direction * bulletSpeed * dt  # adjust bullet speed here
             if self.detect_collision(bullet, self.hero):
                 # Remove bullet from the canvas
                 if self.heroShield > 0:
-                    self.heroShield -= 1
+                    self.heroShield -= damage
                 else:
-                    self.heroHp -= 1
+                    self.heroHp -= damage
                 self.canvas.remove(bullet)
-                self.enemyBullets.remove((bullet, direction, bulletSpeed))
+                self.enemyBullets.remove((bullet, direction, bulletSpeed, damage))
 
                 if self.heroHp <= 0:
                     print("GAME OVER")
-                    for bullet, direction, bulletSpeed in self.enemyBullets:
+                    for bullet, direction, bulletSpeed, damage in self.enemyBullets:
                         self.canvas.remove(bullet)
-                        self.enemyBullets.remove((bullet, direction, bulletSpeed))
+                        self.enemyBullets.remove((bullet, direction, bulletSpeed, damage))
                     for bullet, direction in self.bullets:
                         self.canvas.remove(bullet)
                         self.bullets.remove((bullet, direction))
