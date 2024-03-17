@@ -73,6 +73,11 @@ def clamp(n, min, max):
     else: 
         return n
 
+
+
+
+
+
 class BackgroundLayout(BoxLayout):
     def __init__(self, **kwargs):
         super(BackgroundLayout, self).__init__(**kwargs)
@@ -133,7 +138,7 @@ class BackgroundLayout(BoxLayout):
 
 class Enemy:
     def __init__(self, startPosition, image, size, hp ,firerate):
-        self.enemyTank = allMovingEntity(random.randint(50,500),random.randint(50,500),50)
+        self.enemyTank = allMovingEntity(startPosition[0],startPosition[1],50)
         self.enemyRect = Rectangle(source='asset/Tanks/tankRed2.png', pos=(self.enemyTank.posX, self.enemyTank.posY), size=(50, 50))
         self.hp = hp
         self.firerate = firerate
@@ -174,12 +179,33 @@ class GameWidget(Widget):
         self.enemys = []
         ENEMY_TANK_NUMBER = 3
         for i in range(ENEMY_TANK_NUMBER):
-            newEnemy = Enemy((10,10),"image", 50, 10,0.5) # Enemy(startPosition, image, size, health, firerate) --setting new enemy here
+            newEnemy = Enemy(self.randomGeneratePosition("Null"),"image", 50, 10,0.5) # Enemy(startPosition, image, size, health, firerate) --setting new enemy here
             self.canvas.add(newEnemy.enemyRect)
             self.enemys.append(newEnemy)
 
+
+    def randomGeneratePosition(self, g):
+
+        topOrSide = random.randint(1,2)
+
+        x = 0
+        y = 0
+        window_width, window_height = Window.size
+        if topOrSide == 1: #Spawn from TOP&BOTTOM
+            x = math.floor(random.randint(0,window_width))
+            y = math.floor(random.randint(0,1)*window_height)
+
+            return (x, y)
+        elif topOrSide == 2:
+            y = math.floor(random.randint(0,window_height))
+            x = math.floor(random.randint(0,1)*window_width)
+
+            return (x, y)
+
     def spawnEnemy(self, dt):
-        newEnemy = Enemy((10,10),"image", 50, 10,0.5) # Enemy(startPosition, image, size, health, firerate) --setting new enemy here
+        newpos = self.randomGeneratePosition("Null")
+        print(newpos)
+        newEnemy = Enemy(newpos,"image", 50, 10,0.5) # Enemy(startPosition, image, size, health, firerate) --setting new enemy here
         self.canvas.add(newEnemy.enemyRect)
         self.enemys.append(newEnemy)
 
