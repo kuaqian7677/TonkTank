@@ -27,9 +27,7 @@ class allMovingEntity:
         self.speed = speed
         self.angle = 0
 
-
     def get_angle(self, x,y):
-
         try:
             angle = math.degrees(
                 math.atan(
@@ -39,31 +37,20 @@ class allMovingEntity:
             )
         except Exception as e:
             return 0
-
         if angle > 0:
             return angle
-
         return 180 + angle
 
     def moveTo(self, x, y, ms):
         diffy = y - self.posY
         diffx = x - self.posX 
-        #print(diffx, diffy)
-        
-
         direction = Vector(x,y) - Vector(self.posX, self.posY)
         direction = direction.normalize()
         self.position = Vector(self.position) + direction * self.speed * ms
         self.posX = self.position[0]
         self.posY = self.position[1]
-        self.angle = 1#self.get_angle(x,y)
-        #print(self.angle)
-        #print(self.position)
+        self.angle = 1
         return self.position
-
-hpBarsizeX = 100
-hpBarOffsetY = 80
-heroSize = 50
 
 def clamp(n, min, max): 
     if n < min: 
@@ -72,11 +59,10 @@ def clamp(n, min, max):
         return max
     else: 
         return n
-
-
-
-
-
+    
+hpBarsizeX = 100
+hpBarOffsetY = 80
+heroSize = 50
 
 class BackgroundLayout(BoxLayout):
     def __init__(self, **kwargs):
@@ -106,13 +92,21 @@ class BackgroundLayout(BoxLayout):
         with self.health_bar_layout.canvas:
             Color(0, 1, 0, 1)  # Green color
             self.health_foreground = Rectangle(pos= self.game_widget.hero1.position, size=(0, 20))
+
+        with self.health_bar_layout.canvas:
+            Color(1, 1, 1, 0.6)
+            self.force_field = Rectangle(source="asset/Bullets/forceField.png", pos=(0,0), size=(1, 1))
         
         # Label for HP text
-        self.hp_label = Label(text=f'HP: {self.game_widget.heroHp}', pos=self.health_background.pos, size=(20, 20),font_size=40)
+        self.hp_label = Label(text=f'HP: {self.game_widget.heroHp} / {self.game_widget.maxHp}', pos=self.health_background.pos, size=(20, 20),font_size=40)
         self.health_bar_layout.add_widget(self.hp_label)
 
         self.score_label = Label(text="Score: 0", size_hint=(None, None), size=(100, 40), pos_hint={'center_x': 0.5, 'top': 1},font_size=40)
         self.add_widget(self.score_label)
+        
+        self.shield_label = Label(text="", size_hint=(None, None), size=(100, 40), pos_hint={'center_x': 0.5, 'top': 1},font_size=40)
+        self.add_widget(self.shield_label)
+
         
         #self.health_bar = ProgressBar(max=10, size_hint=(None, None), size=(200, 20), pos_hint={'x': 0.5, 'y': 0.05}) 
         #self.health_bar_layout.add_widget(self.health_bar)
@@ -125,16 +119,27 @@ class BackgroundLayout(BoxLayout):
 
     def update_Player_Stats(self, d10):
         # Update the size of the foreground rectangle based on hero's health
-        health_percent = clamp(self.game_widget.heroHp / 10, 0, 10) 
+        health_percent = clamp(self.game_widget.heroHp / self.game_widget.maxHp, 0, self.game_widget.maxHp) 
+        print(health_percent)
         self.health_background.pos = (self.game_widget.hero1.posX - (hpBarsizeX/2) + (heroSize/2),self.game_widget.hero1.posY + hpBarOffsetY)
         self.health_foreground.pos = (self.game_widget.hero1.posX- (hpBarsizeX/2)  + (heroSize/2),self.game_widget.hero1.posY + hpBarOffsetY)
         
         self.health_foreground.size = (health_percent * hpBarsizeX, 20)
-        self.hp_label.text = f'HP: {self.game_widget.heroHp}'
+        self.hp_label.text = f'HP: {self.game_widget.heroHp} / {self.game_widget.maxHp}'
         self.hp_label.pos=(0,0)
         self.score_label.text = f"Score: {self.game_widget.score}"
         window_width, window_height = Window.size
         self.score_label.pos = (window_width/2 -50, window_height - 40)
+
+        shieldText = ""
+        self.force_field.size=(1, 1)
+        if self.game_widget.heroShield > 0:
+            self.force_field.size=(80, 80)
+            shieldText = f"Shield: {self.game_widget.heroShield:.1f}"
+        self.shield_label.text = shieldText
+        self.shield_label.pos = (window_width/2 -50,  40)
+
+        self.force_field.pos = (self.game_widget.hero1.posX - 20, self.game_widget.hero1.posY - 20)
 
 class Enemy:
     def __init__(self, startPosition, image, size, hp ,firerate, speed, bulletSpeed):
@@ -153,9 +158,17 @@ class Explosive:
         self.size = size
         with canvas:
             self.explosiveBall = Ellipse(source='asset/Bullets/bulletYellow2.png',pos=(startPosition[0] - size/2,startPosition[1]- size/2), size=(size, size))
+
 class RandomBuff:
     def __init__(self, startPosition):
-        self.buffRect = Rectangle(source="asset/Bullets/wrenchRepair.png", pos=(startPosition[0],startPosition[1]), size=(40,40))
+        buffId = random.randint(1,3)
+        self.buffId = buffId
+        if buffId == 1:
+            self.buffRect = Rectangle(source="asset/Bullets/shield.png", pos=(startPosition[0],startPosition[1]), size=(40,40))
+        elif buffId == 2:
+            self.buffRect = Rectangle(source="asset/Bullets/wrenchRepair.png", pos=(startPosition[0],startPosition[1]), size=(40,40))
+        else:
+            self.buffRect = Rectangle(source="", pos=(startPosition[0],startPosition[1]), size=(40,40))
         print("Created buff")
 
 
@@ -171,7 +184,6 @@ class GameWidget(Widget):
 
         self.sound = SoundLoader.load('test.mp3')
         self.sound.play()
-
         # calculate for middle spawn point
         window_width, window_height = Window.size
         self.screen_Width = window_width
@@ -182,8 +194,10 @@ class GameWidget(Widget):
         
         self.hero1 = allMovingEntity((window_width - hero_width) / 2,(window_height - hero_height) / 2, 100)
         self.heroHp = 10
+        self.maxHp = 10
         self.score = 0
         self.heroDamage = 5
+        self.heroShield = 0
 
         with self.canvas:
             self.hero = Rectangle(source='asset/Tanks/tankBlue2.png', pos=(self.hero_x, self.hero_y), size=(heroSize, heroSize))
@@ -358,18 +372,39 @@ class GameWidget(Widget):
             bullet.pos = Vector(*bullet.pos) + direction * bulletSpeed * dt  # adjust bullet speed here
             if self.detect_collision(bullet, self.hero):
                 # Remove bullet from the canvas
-                self.heroHp -= 1
+                if self.heroShield > 0:
+                    self.heroShield -= 1
+                else:
+                    self.heroHp -= 1
+                self.canvas.remove(bullet)
+                self.enemyBullets.remove((bullet, direction, bulletSpeed))
+
                 if self.heroHp <= 0:
                     print("GAME OVER")
-                self.canvas.remove(bullet)
-                self.enemyBullets.remove((bullet, direction, bulletSpeed))  
-        
+                    for bullet, direction, bulletSpeed in self.enemyBullets:
+                        self.canvas.remove(bullet)
+                        self.enemyBullets.remove((bullet, direction, bulletSpeed))
+                    for bullet, direction in self.bullets:
+                        self.canvas.remove(bullet)
+                        self.bullets.remove((bullet, direction))
+
         for buff in self.randomBuff:
             if self.detect_collision(buff.buffRect, self.hero):
                 # Remove bullet from the canvas
-                self.heroHp = 10
+                if buff.buffId == 1:
+                    self.heroShield += 10
+                    
+                elif buff.buffId == 2:
+                    self.maxHp += 0.5
+                    hp = clamp(self.heroHp + 5, 0, self.maxHp) 
+                    self.heroHp = hp
                 self.canvas.remove(buff.buffRect)
                 self.randomBuff.remove(buff)  
+        shield = clamp(self.heroShield - 1/120, 0, 999) 
+        
+        self.heroShield = shield
+
+
 
     def detect_collision(self, rect1, rect2):
         x1, y1 = rect1.pos
@@ -426,7 +461,7 @@ class MyApp(App):
         Clock.schedule_interval(game.move_bullets, 1/60)  
         Clock.schedule_interval(game.move_enemys, 1/60) 
         Clock.schedule_interval(bgLayout.update_Player_Stats, 1/60)
-        Clock.schedule_interval(game.generateRandomBuff, 0.5)
+        Clock.schedule_interval(game.generateRandomBuff, 2)
         Clock.schedule_interval(game.spawnEnemyRed, 2)
         Clock.schedule_interval(game.spawnEnemyGreen, 3)
         return bgLayout
