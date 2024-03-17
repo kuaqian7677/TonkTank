@@ -171,6 +171,10 @@ class GameWidget(Widget):
             self.canvas.add(newEnemy.enemyRect)
             self.enemys.append(newEnemy)
 
+    def spawnEnemy(self, dt):
+        newEnemy = Enemy((10,10),"image", 50, 10,0.5) # Enemy(startPosition, image, size, health, firerate) --setting new enemy here
+        self.canvas.add(newEnemy.enemyRect)
+        self.enemys.append(newEnemy)
 
     def _on_keyboard_closed(self):
         self._keyboard.unbind(on_key_down=self._on_key_down)
@@ -330,6 +334,7 @@ class MyApp(App):
         Clock.schedule_interval(game.move_bullets, 1/60)  
         Clock.schedule_interval(game.move_enemys, 1/60) 
         Clock.schedule_interval(bgLayout.update_health_bar, 1/60)
+        Clock.schedule_interval(game.spawnEnemy, 1)
         return bgLayout
 
 if __name__ == '__main__':
