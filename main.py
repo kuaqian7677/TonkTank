@@ -1,6 +1,6 @@
 from kivy.app import App
 from kivy.uix.widget import Widget
-from kivy.graphics import Rectangle ,Color
+from kivy.graphics import Rectangle ,Color, Rotate
 from kivy.core.window import Window
 from kivy.clock import Clock
 from kivy.core.audio import SoundLoader
@@ -56,7 +56,7 @@ class allMovingEntity:
         self.posX = self.position[0]
         self.posY = self.position[1]
         self.angle = 1#self.get_angle(x,y)
-        print(self.angle)
+        #print(self.angle)
         #print(self.position)
         return self.position
 
@@ -140,21 +140,22 @@ class GameWidget(Widget):
         self.heroHp = 10
 
         with self.canvas:
-            self.hero = Rectangle(source='asset/Tanks/tankBlue.png', pos=(self.hero_x, self.hero_y), size=(heroSize, heroSize))
+            self.hero = Rectangle(source='asset/Tanks/tankBlue2.png', pos=(self.hero_x, self.hero_y), size=(heroSize, heroSize))
 
         self.bullets = []
+        self.enemyBullets = []
         self.enemys = []
-        ENEMY_TANK_NUMBER = 2
+        ENEMY_TANK_NUMBER = 3
         for i in range(ENEMY_TANK_NUMBER):
-            enemyTank = allMovingEntity(random.randint(100,400),random.randint(100,400),50)
-            #enemyColor = Rectangle(source='asset/Tanks/tankRed.png', pos=(enemyTank.posX, enemyTank.posY), size=(50, 50), angle=0)
+            enemyTank = allMovingEntity(random.randint(50,500),random.randint(50,500),50)  #(Pos, Pos, Speed)
             with self.canvas:
                 PushMatrix()
-                enemyColor = Rectangle(source='asset/Tanks/tankRed.png', pos=(enemyTank.posX, enemyTank.posY), size=(50, 50))
+                enemyColor = Rectangle(source='asset/Tanks/tankRed2.png', pos=(enemyTank.posX, enemyTank.posY), size=(50, 50))
                 Rotate(angle=100)
                 PopMatrix()
-            target = [10,10]
-            self.enemys.append((enemyTank, enemyColor,target))
+            enemyHp = 2
+            self.enemys.append((enemyTank, enemyColor, enemyHp))
+            
         
 
 
@@ -200,15 +201,44 @@ class GameWidget(Widget):
 
             #create bullet
             bullet = Rectangle(source='asset/Bullets/bulletSilverSilver_outline.png', pos=start_pos, size=(10, 10))
-            self.bullets.append((bullet, direction))  # Store bullet and its direction
+            # Add rotation instruction
+
+            rotation_angle = 0  # Set your desired rotation angle here
+            with self.canvas:
+                PushMatrix()
+                Rotate(angle=rotation_angle, origin=(self.hero1.posX,self.hero1.posY ))
+                self.canvas.add(bullet)
+                PopMatrix()
+
+            # Append bullet and its direction
+            self.bullets.append((bullet, direction))
+
+    def enemyShoot(self,enemyEntity ):
+        print(enemyEntity)
+        direction = Vector(self.hero1.posX + 20, self.hero1.posY + 20) - Vector(enemyEntity.position)
+        direction = direction.normalize()
+            # bullet start pos = hero's current pos
+        start_pos = (enemyEntity.posX + 20, enemyEntity.posY + 20)
+
+            #create bullet
+        bullet = Rectangle(source='asset/Bullets/bulletSilverSilver_outline.png', pos=start_pos, size=(10, 10))
+            # Add rotation instruction
+
+        rotation_angle = 0  # Set your desired rotation angle here
+        with self.canvas:
+            PushMatrix()
+            Rotate(angle=rotation_angle, origin=(self.hero1.posX,self.hero1.posY ))
             self.canvas.add(bullet)
+            PopMatrix()
+        # Append bullet and its direction
+        self.enemyBullets.append((bullet, direction))
     
     def move_bullets(self, dt):
         for bullet, direction in self.bullets:
             bullet.pos = Vector(*bullet.pos) + direction * 600 * dt  # adjust bullet speed here
             
             # Check for collisions between bullet and enemies
-            for enemy, enemyRect, targetPos in self.enemys:
+            for enemy, enemyRect, hp in self.enemys:
                 if self.detect_collision(bullet, enemyRect):
                     # Remove bullet from the canvas
                     self.canvas.remove(bullet)
@@ -216,8 +246,10 @@ class GameWidget(Widget):
                     
                     # Remove enemy from the canvas and enemy list
                     self.canvas.remove(enemyRect)
-                    self.enemys.remove((enemy, enemyRect, targetPos))
+                    self.enemys.remove((enemy, enemyRect, hp))
                     break 
+        for bullet, direction in self.enemyBullets:
+            bullet.pos = Vector(*bullet.pos) + direction * 600 * dt  # adjust bullet speed here
 
     def detect_collision(self, rect1, rect2):
         x1, y1 = rect1.pos
@@ -231,11 +263,12 @@ class GameWidget(Widget):
         return False
 
     def move_enemys(self, dt):
-        for i, (enemy1, enemyRect1, targetPos1) in enumerate(self.enemys):
-            targetPos1 = [self.hero1.posX, self.hero1.posY]
-            enemy1.moveTo(targetPos1[0], targetPos1[1], 1 / 60)
+        for i, (enemy1, enemyRect1, hp) in enumerate(self.enemys):
+            
+            enemy1.moveTo(self.hero1.posX, self.hero1.posY, 1 / 60)
             enemyRect1.pos = enemy1.position
-            for j, (enemy2, enemyRect2, targetPos2) in enumerate(self.enemys):
+            self.enemyShoot(enemy1)
+            for j, (enemy2, enemyRect2, hp) in enumerate(self.enemys):
                 if i != j and self.detect_collision(enemyRect1, enemyRect2):
                     # Collision detected, but do not take any action
                     pass
@@ -255,10 +288,11 @@ class GameWidget(Widget):
         #print(etype)
         mousePos = [me.spos[0]*Window.size[0], me.spos[1]*Window.size[1]]
         if etype == "update":
-            print(mousePos)
+            #print(mousePos)
             return mousePos
         elif etype == "begin":
             print("Click at",mousePos)
+            
  
     Window.bind(on_motion=on_motion)
 
