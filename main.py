@@ -1,6 +1,6 @@
 from kivy.app import App
 from kivy.uix.widget import Widget
-from kivy.graphics import Rectangle ,Color, Rotate
+from kivy.graphics import Rectangle ,Color, Rotate, Ellipse
 from kivy.core.window import Window
 from kivy.clock import Clock
 from kivy.core.audio import SoundLoader
@@ -146,6 +146,15 @@ class Enemy:
         self.score = 10
         print("Created enemy")
 
+class Explosive:
+    def __init__(self, canvas,startPosition, image, size):
+        self.timeStart = time.time()
+        self.size = size
+        with canvas:
+            self.explosiveBall = Ellipse(source='asset/Bullets/bulletYellow2.png',pos=(startPosition[0] - size/2,startPosition[1]- size/2), size=(size, size))
+            
+
+
 
 class GameWidget(Widget):
     def __init__(self, **kwargs):
@@ -177,17 +186,16 @@ class GameWidget(Widget):
         self.bullets = []
         self.enemyBullets = []
         self.enemys = []
+        self.explosiveEffect = []
         ENEMY_TANK_NUMBER = 3
         for i in range(ENEMY_TANK_NUMBER):
             newEnemy = Enemy(self.randomGeneratePosition("Null"),"image", 50, 10,0.5) # Enemy(startPosition, image, size, health, firerate) --setting new enemy here
             self.canvas.add(newEnemy.enemyRect)
             self.enemys.append(newEnemy)
-
+        Clock.schedule_interval(self.playExplosion, 1/30)
 
     def randomGeneratePosition(self, g):
-
         topOrSide = random.randint(1,2)
-
         x = 0
         y = 0
         window_width, window_height = Window.size
@@ -208,6 +216,13 @@ class GameWidget(Widget):
         newEnemy = Enemy(newpos,"image", 50, 10,0.5) # Enemy(startPosition, image, size, health, firerate) --setting new enemy here
         self.canvas.add(newEnemy.enemyRect)
         self.enemys.append(newEnemy)
+
+    def playExplosion(self, dt):
+        for explosion in self.explosiveEffect:
+            print(explosion.size)
+
+            explosion.explosiveBall.size = (0.1,0.1)
+            self.explosiveEffect.remove(explosion)
 
     def _on_keyboard_closed(self):
         self._keyboard.unbind(on_key_down=self._on_key_down)
@@ -296,9 +311,14 @@ class GameWidget(Widget):
             for enemy in self.enemys:
                 if self.detect_collision(bullet, enemy.enemyRect):
                     # Remove bullet from the canvas
+                    newExplosion = Explosive(self.canvas, bullet.pos, "Image", 50)
+                    self.explosiveEffect.append(newExplosion)
+
+
                     self.canvas.remove(bullet)
                     self.bullets.remove((bullet, direction))
                     enemy.hp -= 5
+
                     if enemy.hp <= 0:
                         # Remove enemy from the canvas and enemy list
                         self.score += enemy.score
@@ -314,6 +334,8 @@ class GameWidget(Widget):
                     print("GAME OVER")
                 self.canvas.remove(bullet)
                 self.enemyBullets.remove((bullet, direction, bulletSpeed))
+
+    
                 
 
     def detect_collision(self, rect1, rect2):
