@@ -221,7 +221,9 @@ class GameWidget(Widget):
         self.move_clock_event = None  # Initialize move clock event
         self.start_move_clock()
         self.hitsound = SoundLoader.load('sound/osu-hit-sound.mp3')
+        self.repairSound = SoundLoader.load('sound/repairSound.mp3')
         
+
         Clock.schedule_interval(self.spawn_coin, 20)  # Spawn a coin every 20 seconds
         self.coins = []
         Clock.schedule_interval(self.check_coin_disappearance, 1) # Check for coin disappearance every 1 second
@@ -430,6 +432,7 @@ class GameWidget(Widget):
                     # Remove bullet from the canvas
                     newExplosion = Explosive(self.canvas, bullet.pos, "Image", 50)
                     self.explosiveEffect.append(newExplosion)
+                    
                     self.canvas.remove(bullet)
                     self.bullets.remove((bullet, direction))
                     enemy.hp -= self.heroDamage
@@ -437,6 +440,8 @@ class GameWidget(Widget):
 
                     if enemy.hp <= 0:
                         # Remove enemy from the canvas and enemy list
+                        explosionSound = SoundLoader.load('sound/explosion-sound.mp3')
+                        explosionSound.play()
                         self.score += enemy.score
                         self.canvas.remove(enemy.enemyRect)
                         self.enemys.remove(enemy)
@@ -467,6 +472,7 @@ class GameWidget(Widget):
                     self.maxHp += 0.5
                     hp = clamp(self.heroHp + 5, 0, self.maxHp) 
                     self.heroHp = hp
+                    self.repairSound.play()
                 self.canvas.remove(buff.buffRect)
                 self.randomBuff.remove(buff)  
         shield = clamp(self.heroShield - 1/120, 0, 999) 
