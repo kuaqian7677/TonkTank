@@ -408,6 +408,10 @@ class GameWidget(Widget):
         self.heroShield = shield
 
     def restart_game(self):
+
+        app = App.get_running_app()
+        app.elapsed_time = 0
+        
         # Reset hero attributes
         self.heroHp = 10
         self.maxHp = 10
