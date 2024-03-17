@@ -70,6 +70,7 @@ class Coin:
         self.size = (30, 30)  # Adjust size as needed
         self.collected = False
         self.rect = None  # Placeholder for the Rectangle object
+        self.spawn_time = time.time() 
 
     def spawn(self, canvas):
         # Method to spawn the coin on the canvas
@@ -81,6 +82,13 @@ class Coin:
         # Method to collect the coin
         if not self.collected:
             self.collected = True
+            self.canvas.remove(self.rect)
+            return True
+        return False
+    
+    def check_disappear(self):
+        # Method to check if the coin should disappear after 2 seconds
+        if not self.collected and time.time() - self.spawn_time >= 10:
             self.canvas.remove(self.rect)
             return True
         return False
@@ -210,10 +218,9 @@ class GameWidget(Widget):
         self.start_move_clock()
         self.hitsound = SoundLoader.load('sound/osu-hit-sound.mp3')
         
-        
-
-        Clock.schedule_interval(self.spawn_coin, 2)  # Spawn a coin every 2 seconds
+        Clock.schedule_interval(self.spawn_coin, 20)  # Spawn a coin every 20 seconds
         self.coins = []
+        Clock.schedule_interval(self.check_coin_disappearance, 1) # Check for coin disappearance every 1 second
 
         self.sound = SoundLoader.load('test.mp3')
         self.sound.play()
@@ -248,12 +255,18 @@ class GameWidget(Widget):
         Clock.schedule_interval(self.playExplosion, 1/30)
 
     def spawn_coin(self, dt):
-            # Method to spawn a new coin
-            window_width, window_height = Window.size
-            coin_pos = (random.randint(0, window_width - 30), random.randint(0, window_height - 30))
-            coin = Coin(coin_pos)
-            coin.spawn(self.canvas)  # Pass the canvas object when spawning
-            self.coins.append(coin)
+        # Method to spawn a new coin
+        window_width, window_height = Window.size
+        coin_pos = (random.randint(0, window_width - 30), random.randint(0, window_height - 30))
+        coin = Coin(coin_pos)
+        coin.spawn(self.canvas)  # Pass the canvas object when spawning
+        self.coins.append(coin)
+
+    def check_coin_disappearance(self, dt):
+        # Method to check for coin disappearance
+        for coin in self.coins:
+            if coin.check_disappear():
+                self.coins.remove(coin)
 
     def collect_coins(self):
             # Method to check for collisions between hero and coins and collect them
@@ -548,7 +561,7 @@ class MyApp(App):
         Clock.schedule_interval(game.move_bullets, 1/60)  
         Clock.schedule_interval(game.move_enemys, 1/60) 
         Clock.schedule_interval(bgLayout.update_Player_Stats, 1/60)
-        Clock.schedule_interval(game.generateRandomBuff, 10)
+        Clock.schedule_interval(game.generateRandomBuff, 8)
         Clock.schedule_interval(game.spawnEnemyRed, 2)
         Clock.schedule_interval(game.spawnEnemyGreen, 3)
         return bgLayout
