@@ -153,7 +153,10 @@ class Explosive:
         self.size = size
         with canvas:
             self.explosiveBall = Ellipse(source='asset/Bullets/bulletYellow2.png',pos=(startPosition[0] - size/2,startPosition[1]- size/2), size=(size, size))
-            
+class RandomBuff:
+    def __init__(self, startPosition):
+        self.buffRect = Rectangle(source="asset/Bullets/wrenchRepair.png", pos=(startPosition[0],startPosition[1]), size=(40,40))
+        print("Created buff")
 
 
 
@@ -189,6 +192,7 @@ class GameWidget(Widget):
         self.enemyBullets = []
         self.enemys = []
         self.explosiveEffect = []
+        self.randomBuff = []
         ENEMY_TANK_NUMBER = 0
         for i in range(ENEMY_TANK_NUMBER):
             newEnemy = Enemy(self.randomGeneratePosition("Null"),"image", 50, 10,0.9, 40, 100) # Enemy(startPosition, image, size, health, firerate) --setting new enemy here
@@ -212,6 +216,13 @@ class GameWidget(Widget):
 
             return (x, y)
 
+    def randomPosition(self, g):
+        window_width, window_height = Window.size
+        x = random.randint(100,window_width-100)
+        y = random.randint(100,window_height-100)
+        return (x, y)
+
+
     def spawnEnemy(self, dt):
         newpos = self.randomGeneratePosition("Null")
         print(newpos)
@@ -222,16 +233,23 @@ class GameWidget(Widget):
     def spawnEnemyRed(self, dt):
         newpos = self.randomGeneratePosition("Null")
         print(newpos)
-        newEnemy = Enemy(newpos,'asset/Tanks/tankRed2.png', 50, 10,0.5, 40, 100) # Enemy(startPosition, image, size, health, firerate, speed, bullet speed) --setting new enemy here
+        newEnemy = Enemy(newpos,'asset/Tanks/tankRed2.png', 50, 10,1, 40, 100) # Enemy(startPosition, image, size, health, firerate, speed, bullet speed) --setting new enemy here
         self.canvas.add(newEnemy.enemyRect)
         self.enemys.append(newEnemy)
 
     def spawnEnemyGreen(self, dt):
         newpos = self.randomGeneratePosition("Null")
         print(newpos)
-        newEnemy = Enemy(newpos,'asset/Tanks/tankGreen2.png', 40, 10,1, 10, 300) # Enemy(startPosition, image, size, health, firerate, speed, bullet speed) --setting new enemy here
+        newEnemy = Enemy(newpos,'asset/Tanks/tankGreen2.png', 70, 40,3, 10, 50) # Enemy(startPosition, image, size, health, firerate, speed, bullet speed) --setting new enemy here
         self.canvas.add(newEnemy.enemyRect)
         self.enemys.append(newEnemy)
+    
+    def generateRandomBuff(self, dt):
+        newpos = self.randomPosition("Null")
+        print(newpos)
+        newBuff = RandomBuff(newpos) # Enemy(startPosition, image, size, health, firerate, speed, bullet speed) --setting new enemy here
+        self.canvas.add(newBuff.buffRect)
+        self.randomBuff.append(newBuff)
 
     def playExplosion(self, dt):
         for explosion in self.explosiveEffect:
@@ -315,22 +333,17 @@ class GameWidget(Widget):
             self.canvas.add(bullet)
             PopMatrix()
         # Append bullet and its direction
-        
-        #Fire rate
         self.enemyBullets.append((bullet, direction, bulletSpeed))
     
     def move_bullets(self, dt):
         for bullet, direction in self.bullets:
-            bullet.pos = Vector(*bullet.pos) + direction * 600 * dt  # adjust bullet speed here
-            
+            bullet.pos = Vector(*bullet.pos) + direction * 600 * dt  # adjust bullet speed hereaaa
             # Check for collisions between bullet and enemies
             for enemy in self.enemys:
                 if self.detect_collision(bullet, enemy.enemyRect):
                     # Remove bullet from the canvas
                     newExplosion = Explosive(self.canvas, bullet.pos, "Image", 50)
                     self.explosiveEffect.append(newExplosion)
-
-
                     self.canvas.remove(bullet)
                     self.bullets.remove((bullet, direction))
                     enemy.hp -= self.heroDamage
@@ -340,7 +353,7 @@ class GameWidget(Widget):
                         self.score += enemy.score
                         self.canvas.remove(enemy.enemyRect)
                         self.enemys.remove(enemy)
-                        break 
+                    break 
         for bullet, direction, bulletSpeed in self.enemyBullets:
             bullet.pos = Vector(*bullet.pos) + direction * bulletSpeed * dt  # adjust bullet speed here
             if self.detect_collision(bullet, self.hero):
@@ -349,10 +362,14 @@ class GameWidget(Widget):
                 if self.heroHp <= 0:
                     print("GAME OVER")
                 self.canvas.remove(bullet)
-                self.enemyBullets.remove((bullet, direction, bulletSpeed))
-
-    
-                
+                self.enemyBullets.remove((bullet, direction, bulletSpeed))  
+        
+        for buff in self.randomBuff:
+            if self.detect_collision(buff.buffRect, self.hero):
+                # Remove bullet from the canvas
+                self.heroHp = 10
+                self.canvas.remove(buff.buffRect)
+                self.randomBuff.remove(buff)  
 
     def detect_collision(self, rect1, rect2):
         x1, y1 = rect1.pos
@@ -409,8 +426,9 @@ class MyApp(App):
         Clock.schedule_interval(game.move_bullets, 1/60)  
         Clock.schedule_interval(game.move_enemys, 1/60) 
         Clock.schedule_interval(bgLayout.update_Player_Stats, 1/60)
-        Clock.schedule_interval(game.spawnEnemyRed, 1)
-        Clock.schedule_interval(game.spawnEnemyGreen, 1.5)
+        Clock.schedule_interval(game.generateRandomBuff, 0.5)
+        Clock.schedule_interval(game.spawnEnemyRed, 2)
+        Clock.schedule_interval(game.spawnEnemyGreen, 3)
         return bgLayout
 
 if __name__ == '__main__':
