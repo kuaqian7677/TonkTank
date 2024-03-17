@@ -64,6 +64,15 @@ class allMovingEntity:
 hpBarsizeX = 100
 hpBarOffsetY = 80
 heroSize = 50
+
+def clamp(n, min, max): 
+    if n < min: 
+        return min
+    elif n > max: 
+        return max
+    else: 
+        return n
+
 class BackgroundLayout(BoxLayout):
     def __init__(self, **kwargs):
         super(BackgroundLayout, self).__init__(**kwargs)
@@ -109,7 +118,7 @@ class BackgroundLayout(BoxLayout):
 
     def update_health_bar(self, d10):
         # Update the size of the foreground rectangle based on hero's health
-        health_percent = self.game_widget.heroHp / 10
+        health_percent = clamp(self.game_widget.heroHp / 10, 0, 10) 
         self.health_background.pos = (self.game_widget.hero1.posX - (hpBarsizeX/2) + (heroSize/2),self.game_widget.hero1.posY + hpBarOffsetY)
         self.health_foreground.pos = (self.game_widget.hero1.posX- (hpBarsizeX/2)  + (heroSize/2),self.game_widget.hero1.posY + hpBarOffsetY)
         
@@ -158,7 +167,7 @@ class GameWidget(Widget):
         self.enemys = []
         ENEMY_TANK_NUMBER = 3
         for i in range(ENEMY_TANK_NUMBER):
-            newEnemy = Enemy((10,10),"image", 50, 10,1)
+            newEnemy = Enemy((10,10),"image", 50, 10,0.1)
             self.canvas.add(newEnemy.enemyRect)
             self.enemys.append(newEnemy)
             # enemyTank = allMovingEntity(random.randint(50,500),random.randint(50,500),50)  #(Pos, Pos, Speed)
@@ -228,7 +237,6 @@ class GameWidget(Widget):
             self.bullets.append((bullet, direction))
 
     def enemyShoot(self,enemyEntity ):
-        print(enemyEntity)
         if (time.time() - enemyEntity.lastShot) <= enemyEntity.firerate:
             return
         else:
@@ -241,7 +249,7 @@ class GameWidget(Widget):
             #create bullet
         bullet = Rectangle(source='asset/Bullets/bulletSilverSilver_outline.png', pos=start_pos, size=(10, 10))
             # Add rotation instruction
-
+        bulletSpeed = 200
         rotation_angle = 0  # Set your desired rotation angle here
         with self.canvas:
             PushMatrix()
@@ -251,7 +259,7 @@ class GameWidget(Widget):
         # Append bullet and its direction
         
         #Fire rate
-        self.enemyBullets.append((bullet, direction))
+        self.enemyBullets.append((bullet, direction, bulletSpeed))
     
     def move_bullets(self, dt):
         for bullet, direction in self.bullets:
@@ -268,8 +276,16 @@ class GameWidget(Widget):
                     self.canvas.remove(enemy.enemyRect)
                     self.enemys.remove(enemy)
                     break 
-        for bullet, direction in self.enemyBullets:
-            bullet.pos = Vector(*bullet.pos) + direction * 600 * dt  # adjust bullet speed here
+        for bullet, direction, bulletSpeed in self.enemyBullets:
+            bullet.pos = Vector(*bullet.pos) + direction * bulletSpeed * dt  # adjust bullet speed here
+            if self.detect_collision(bullet, self.hero):
+                # Remove bullet from the canvas
+                self.heroHp -= 1
+                if self.heroHp <= 0:
+                    print("GAME OVER")
+                self.canvas.remove(bullet)
+                self.enemyBullets.remove((bullet, direction, bulletSpeed))
+                
 
     def detect_collision(self, rect1, rect2):
         x1, y1 = rect1.pos
