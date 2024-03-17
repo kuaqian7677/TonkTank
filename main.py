@@ -103,10 +103,12 @@ class BackgroundLayout(BoxLayout):
             self.health_foreground = Rectangle(pos= self.game_widget.hero1.position, size=(0, 20))
         
         # Label for HP text
-        self.hp_label = Label(text=f'HP: {self.game_widget.heroHp}', pos=self.health_background.pos, size=(0, 20),font_size=40)
+        self.hp_label = Label(text=f'HP: {self.game_widget.heroHp}', pos=self.health_background.pos, size=(20, 20),font_size=40)
         self.health_bar_layout.add_widget(self.hp_label)
+
+        self.score_label = Label(text="Score: 0", size_hint=(None, None), size=(100, 40), pos_hint={'center_x': 0.5, 'top': 1},font_size=40)
+        self.add_widget(self.score_label)
         
-        self.update_health_bar(10)
         #self.health_bar = ProgressBar(max=10, size_hint=(None, None), size=(200, 20), pos_hint={'x': 0.5, 'y': 0.05}) 
         #self.health_bar_layout.add_widget(self.health_bar)
         
@@ -116,7 +118,7 @@ class BackgroundLayout(BoxLayout):
         self.rect.pos = self.pos
        
 
-    def update_health_bar(self, d10):
+    def update_Player_Stats(self, d10):
         # Update the size of the foreground rectangle based on hero's health
         health_percent = clamp(self.game_widget.heroHp / 10, 0, 10) 
         self.health_background.pos = (self.game_widget.hero1.posX - (hpBarsizeX/2) + (heroSize/2),self.game_widget.hero1.posY + hpBarOffsetY)
@@ -124,7 +126,10 @@ class BackgroundLayout(BoxLayout):
         
         self.health_foreground.size = (health_percent * hpBarsizeX, 20)
         self.hp_label.text = f'HP: {self.game_widget.heroHp}'
-        self.hp_label.pos=(10,10)
+        self.hp_label.pos=(0,0)
+        self.score_label.text = f"Score: {self.game_widget.score}"
+        window_width, window_height = Window.size
+        self.score_label.pos = (window_width/2 -50, window_height - 40)
 
 class Enemy:
     def __init__(self, startPosition, image, size, hp ,firerate):
@@ -133,6 +138,7 @@ class Enemy:
         self.hp = hp
         self.firerate = firerate
         self.lastShot = time.time() 
+        self.score = 10
         print("Created enemy")
 
 
@@ -158,6 +164,7 @@ class GameWidget(Widget):
         
         self.hero1 = allMovingEntity((window_width - hero_width) / 2,(window_height - hero_height) / 2, 100)
         self.heroHp = 10
+        self.score = 0
 
         with self.canvas:
             self.hero = Rectangle(source='asset/Tanks/tankBlue2.png', pos=(self.hero_x, self.hero_y), size=(heroSize, heroSize))
@@ -265,11 +272,13 @@ class GameWidget(Widget):
                     # Remove bullet from the canvas
                     self.canvas.remove(bullet)
                     self.bullets.remove((bullet, direction))
-                    
-                    # Remove enemy from the canvas and enemy list
-                    self.canvas.remove(enemy.enemyRect)
-                    self.enemys.remove(enemy)
-                    break 
+                    enemy.hp -= 5
+                    if enemy.hp <= 0:
+                        # Remove enemy from the canvas and enemy list
+                        self.score += enemy.score
+                        self.canvas.remove(enemy.enemyRect)
+                        self.enemys.remove(enemy)
+                        break 
         for bullet, direction, bulletSpeed in self.enemyBullets:
             bullet.pos = Vector(*bullet.pos) + direction * bulletSpeed * dt  # adjust bullet speed here
             if self.detect_collision(bullet, self.hero):
@@ -333,7 +342,7 @@ class MyApp(App):
         game = bgLayout.game_widget
         Clock.schedule_interval(game.move_bullets, 1/60)  
         Clock.schedule_interval(game.move_enemys, 1/60) 
-        Clock.schedule_interval(bgLayout.update_health_bar, 1/60)
+        Clock.schedule_interval(bgLayout.update_Player_Stats, 1/60)
         Clock.schedule_interval(game.spawnEnemy, 1)
         return bgLayout
 
