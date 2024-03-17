@@ -11,6 +11,7 @@ from kivy.uix.progressbar import ProgressBar
 from kivy.uix.floatlayout import FloatLayout
 from kivy.utils import get_color_from_hex
 from kivy.uix.label import Label
+from kivy.clock import Clock
 
 from kivy.graphics.context_instructions import PopMatrix, PushMatrix, Transform, Rotate
 
@@ -68,6 +69,9 @@ class BackgroundLayout(BoxLayout):
     def __init__(self, **kwargs):
         super(BackgroundLayout, self).__init__(**kwargs)
         self.orientation = 'vertical'
+        super(BackgroundLayout, self).__init__(**kwargs)
+        self.timer_label = Label(text="Timer: 0", size_hint=(None, None), size=(100, 40), font_size=20)
+        self.add_widget(self.timer_label)
         # Load the background image
         with self.canvas.before:
             self.bg = Image(source='asset/Environment/grass.png').texture
@@ -459,7 +463,8 @@ class MyApp(App):
     def build(self):
         bgLayout = BackgroundLayout()
         game = bgLayout.game_widget
-
+        self.elapsed_time = 0
+        Clock.schedule_interval(self.update_timer, 1)
 
         Clock.schedule_interval(game.move_bullets, 1/60)  
         Clock.schedule_interval(game.move_enemys, 1/60) 
@@ -468,6 +473,14 @@ class MyApp(App):
         Clock.schedule_interval(game.spawnEnemyRed, 2)
         Clock.schedule_interval(game.spawnEnemyGreen, 3)
         return bgLayout
+    
+    def update_timer(self, dt):
+        # Update elapsed time
+        self.elapsed_time += 1
+
+        # Update timer label
+        bgLayout = self.root
+        bgLayout.timer_label.text = f"Timer: {self.elapsed_time}"
 
 if __name__ == '__main__':
     app = MyApp()
