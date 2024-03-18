@@ -18,7 +18,6 @@ import math
 import random
 import time 
 
-
 class allMovingEntity:
     def __init__(self, x,y, speed):
         self.posX = x
@@ -156,7 +155,7 @@ class BackgroundLayout(BoxLayout):
     def update_Player_Stats(self, d10):
         # Update the size of the foreground rectangle based on hero's health
         health_percent = clamp(self.game_widget.heroHp / self.game_widget.maxHp, 0, self.game_widget.maxHp) 
-        print(health_percent)
+       
         self.health_background.pos = (self.game_widget.hero1.posX - (hpBarsizeX/2) + (heroSize/2),self.game_widget.hero1.posY + hpBarOffsetY)
         self.health_foreground.pos = (self.game_widget.hero1.posX- (hpBarsizeX/2)  + (heroSize/2),self.game_widget.hero1.posY + hpBarOffsetY)
         
@@ -178,7 +177,7 @@ class BackgroundLayout(BoxLayout):
         self.force_field.pos = (self.game_widget.hero1.posX - 20, self.game_widget.hero1.posY - 20)
 
 class Enemy:
-    def __init__(self, startPosition, image, size, hp ,firerate, speed, bulletSpeed, damage, bs):
+    def __init__(self, startPosition, image, size, hp ,firerate, speed, bulletSpeed, damage, bulletSize, ):
         self.enemyTank = allMovingEntity(startPosition[0],startPosition[1],speed)
         self.enemyRect = Rectangle(source=image, pos=(self.enemyTank.posX, self.enemyTank.posY), size=(size, size))
         self.hp = hp
@@ -187,8 +186,8 @@ class Enemy:
         self.score = 10
         self.bulletSpeed = bulletSpeed
         self.damage = damage
-        self.bulletSize = bs
-        print("Created enemy")
+        self.bulletSize = bulletSize
+        #print("Created enemy")
 
 class Explosive:
     def __init__(self, canvas,startPosition, image, size):
@@ -207,7 +206,7 @@ class RandomBuff:
             self.buffRect = Rectangle(source="asset/Bullets/wrenchRepair.png", pos=(startPosition[0],startPosition[1]), size=(40,40))
         else:
             self.buffRect = Rectangle(source="", pos=(startPosition[0],startPosition[1]), size=(1,1))
-        print("Created buff")
+        #print("Created buff")
 
 class GameWidget(Widget):
     def __init__(self, **kwargs):
@@ -307,35 +306,42 @@ class GameWidget(Widget):
 
     def spawnEnemy(self, dt):
         newpos = self.randomGeneratePosition("Null")
-        print(newpos)
+        #print(newpos)
         newEnemy = Enemy(newpos,'asset/Tanks/tankRed2.png', 50, 10,0.5, 40, 100) # Enemy(startPosition, image, size, health, firerate, speed, bullet speed) --setting new enemy here
         self.canvas.add(newEnemy.enemyRect)
         self.enemys.append(newEnemy)
 
     def spawnEnemyRed(self, dt):
         newpos = self.randomGeneratePosition("Null")
-        print(newpos)
+        #print(newpos)
         newEnemy = Enemy(newpos,'asset/Tanks/tankRed2.png', 50, 10,1, 40, 100,1, 10) # Enemy(startPosition, image, size, health, firerate, speed, bullet speed, damage) --setting new enemy here
         self.canvas.add(newEnemy.enemyRect)
         self.enemys.append(newEnemy)
 
     def spawnEnemyGreen(self, dt):
         newpos = self.randomGeneratePosition("Null")
-        print(newpos)
-        newEnemy = Enemy(newpos,'asset/Tanks/tankGreen2.png', 70, 40,3, 10, 50,2, 15) # Enemy(startPosition, image, size, health, firerate, speed, bullet speed) --setting new enemy here
+        #print(newpos)
+        newEnemy = Enemy(newpos,'asset/Tanks/tankGreen2.png', 70, 40,3, 10, 50,2, 18) # Enemy(startPosition, image, size, health, firerate, speed, bullet speed) --setting new enemy here
+        self.canvas.add(newEnemy.enemyRect)
+        self.enemys.append(newEnemy)
+
+    def spawnEnemySniper(self, dt):
+        newpos = self.randomGeneratePosition("Null")
+        #print(newpos)
+        newEnemy = Enemy(newpos,'asset/Tanks/tankSnipe.png', 50,15,5,5,500,4,12) # Enemy(startPosition, image, size, health, firerate, speed, bullet speed) --setting new enemy here
         self.canvas.add(newEnemy.enemyRect)
         self.enemys.append(newEnemy)
     
     def generateRandomBuff(self, dt):
         newpos = self.randomPosition("Null")
-        print(newpos)
+        #print(newpos)
         newBuff = RandomBuff(newpos) # Enemy(startPosition, image, size, health, firerate, speed, bullet speed) --setting new enemy here
         self.canvas.add(newBuff.buffRect)
         self.randomBuff.append(newBuff)
 
     def playExplosion(self, dt):
         for explosion in self.explosiveEffect:
-            print(explosion.size)
+            #print(explosion.size)
 
             explosion.explosiveBall.size = (0.1,0.1)
             self.explosiveEffect.remove(explosion)
@@ -346,12 +352,12 @@ class GameWidget(Widget):
         self._keyboard = None
 
     def _on_key_down(self, keyboard, keycode, text, modifiers):
-        print('down', text)
+        #print('down', text)
         self.pressed_keys.add(text)
 
     def _on_key_up(self, keyboard, keycode):
         text = keycode[1]
-        print('up', text)
+        #print('up', text)
         if text in self.pressed_keys:
             self.pressed_keys.remove(text)
 
@@ -421,6 +427,12 @@ class GameWidget(Widget):
         self.enemyBullets.append((bullet, direction, bulletSpeed, damage))
     
     def move_bullets(self, dt):
+        #print(len(self.enemyBullets), len(self.bullets))
+        if len(self.enemyBullets) > 300:
+            self.enemyBullets.pop(0)
+        if len(self.bullets) > 50:
+            self.bullets.pop(0)
+
         for bullet, direction in self.bullets:
             bullet.pos = Vector(*bullet.pos) + direction * 600 * dt  # adjust bullet speed hereaaa
             # Check for collisions between bullet and enemies
@@ -445,7 +457,8 @@ class GameWidget(Widget):
                         self.score += enemy.score
                         self.canvas.remove(enemy.enemyRect)
                         self.enemys.remove(enemy)
-                    break 
+                    break
+
         for bullet, direction, bulletSpeed, damage in self.enemyBullets:
             bullet.pos = Vector(*bullet.pos) + direction * bulletSpeed * dt  # adjust bullet speed here
             if self.detect_collision(bullet, self.hero):
@@ -456,9 +469,10 @@ class GameWidget(Widget):
                     self.heroHp -= damage
                 self.canvas.remove(bullet)
                 self.enemyBullets.remove((bullet, direction, bulletSpeed, damage))
-
+                
                 if self.heroHp <= 0:
                     print("GAME OVER")
+                    print("Your score is", self.score , "points")
                     self.restart_game()  # Call method to restart the game
                     return
 
@@ -466,7 +480,7 @@ class GameWidget(Widget):
             if self.detect_collision(buff.buffRect, self.hero):
                 # Remove bullet from the canvas
                 if buff.buffId == 1:
-                    self.heroShield += 10
+                    self.heroShield += 8
                     
                 elif buff.buffId == 2:
                     self.maxHp += 0.5
@@ -550,7 +564,7 @@ class GameWidget(Widget):
             #print(mousePos)
             return mousePos
         elif etype == "begin":
-            print("Click at",mousePos)
+            print()
             
  
     Window.bind(on_motion=on_motion)
@@ -566,20 +580,24 @@ class MyApp(App):
         bgLayout = BackgroundLayout()
         game = bgLayout.game_widget
         self.elapsed_time = 0
-
+        
         Clock.schedule_interval(self.update_timer, 1)
         Clock.schedule_interval(game.move_bullets, 1/60)  
         Clock.schedule_interval(game.move_enemys, 1/60) 
         Clock.schedule_interval(bgLayout.update_Player_Stats, 1/60)
         Clock.schedule_interval(game.generateRandomBuff, 8)
-        Clock.schedule_interval(game.spawnEnemyRed, 2)
-        Clock.schedule_interval(game.spawnEnemyGreen, 3)
+        self.game = game
         return bgLayout
     
     def update_timer(self, dt):
         # Update elapsed time
         self.elapsed_time += 1
-
+        if self.elapsed_time % 2 == 0:
+            self.game.spawnEnemyRed(0)
+        if self.elapsed_time % 3 == 0:
+            self.game.spawnEnemyGreen(0)
+        if self.elapsed_time % 6 == 0:
+            self.game.spawnEnemySniper(0)
         # Update timer label
         bgLayout = self.root
         bgLayout.timer_label.text = f"Timer: {self.elapsed_time}"
