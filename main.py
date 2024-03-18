@@ -592,9 +592,9 @@ class MyApp(App):
     def update_timer(self, dt):
         # Update elapsed time
         self.elapsed_time += 1
-        if self.elapsed_time % 2 == 0:
-            self.game.spawnEnemyRed(0)
         if self.elapsed_time % 3 == 0:
+            self.game.spawnEnemyRed(0)
+        if self.elapsed_time % 4 == 0:
             self.game.spawnEnemyGreen(0)
         if self.elapsed_time % 6 == 0:
             self.game.spawnEnemySniper(0)
