@@ -318,6 +318,13 @@ class GameWidget(Widget):
         self.canvas.add(newEnemy.enemyRect)
         self.enemys.append(newEnemy)
 
+    def spawnEnemyRedBoss(self, dt):
+        newpos = self.randomGeneratePosition("Null")
+        #print(newpos)
+        newEnemy = Enemy(newpos,'asset/Tanks/tankRed2.png', 300,1000,0.1,1,300,1,30) # Enemy(startPosition, image, size, health, firerate, speed, bullet speed, damage) --setting new enemy here
+        self.canvas.add(newEnemy.enemyRect)
+        self.enemys.append(newEnemy)
+
     def spawnEnemyGreen(self, dt):
         newpos = self.randomGeneratePosition("Null")
         #print(newpos)
@@ -586,6 +593,7 @@ class MyApp(App):
         Clock.schedule_interval(game.move_enemys, 1/60) 
         Clock.schedule_interval(bgLayout.update_Player_Stats, 1/60)
         Clock.schedule_interval(game.generateRandomBuff, 8)
+        #game.spawnEnemyRedBoss(0)
         self.game = game
         return bgLayout
     
@@ -593,11 +601,16 @@ class MyApp(App):
         # Update elapsed time
         self.elapsed_time += 1
         if self.elapsed_time % 3 == 0:
+            chance = random.randint(1,100)
+            if chance == 1:
+                self.game.spawnEnemyRedBoss(0)
             self.game.spawnEnemyRed(0)
         if self.elapsed_time % 4 == 0:
             self.game.spawnEnemyGreen(0)
         if self.elapsed_time % 6 == 0:
+            
             self.game.spawnEnemySniper(0)
+        
         # Update timer label
         bgLayout = self.root
         bgLayout.timer_label.text = f"Timer: {self.elapsed_time}"

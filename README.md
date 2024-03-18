@@ -1,3 +1,5 @@
+user kuaqian7677 => Pongsaton SaeFung 6610110188
+user LomerAlloys => Sarankorn Chaisuntranon 6610110289
 # How to play
 
 W - move up
